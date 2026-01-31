@@ -1,0 +1,13 @@
+{
+  "startChat": "चैट शुरू करें",
+  "joinRoom": "कमरे में शामिल हों",
+  "sendMessage": "संदेश भेजें",
+  "typeMessage": "अपना संदेश टाइप करें...",
+  "online": "ऑनलाइन",
+  "offline": "ऑफलाइन",
+  "users": "उपयोगकर्ता",
+  "messages": "संदेश",
+  "room": "कमरा",
+  "leaveRoom": "कमरा छोड़ें",
+  "createRoom": "कमरा बनाएं"
+}

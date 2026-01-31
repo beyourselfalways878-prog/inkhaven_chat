@@ -1,0 +1,74 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "InkHaven Anonymous sanctuary" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]:
+          - generic [ref=e7]: InkHaven
+          - generic [ref=e8]: Anonymous sanctuary
+      - navigation [ref=e9]:
+        - link "Onboarding" [ref=e10] [cursor=pointer]:
+          - /url: /onboarding
+        - link "Quick Match" [ref=e11] [cursor=pointer]:
+          - /url: /quick-match
+        - link "Settings" [ref=e12] [cursor=pointer]:
+          - /url: /settings
+        - link "Moderation" [ref=e13] [cursor=pointer]:
+          - /url: /moderation
+        - link "About" [ref=e14] [cursor=pointer]:
+          - /url: /about
+      - generic [ref=e15]:
+        - button "Switch to dark mode" [ref=e16]:
+          - img [ref=e17]
+          - img
+          - img [ref=e20]
+        - link "Enter chat" [ref=e21] [cursor=pointer]:
+          - /url: /chat
+        - link "Create profile" [ref=e22] [cursor=pointer]:
+          - /url: /onboarding
+  - main [ref=e23]:
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - generic [ref=e28]: Private room
+          - generic [ref=e29]: Room room_e2e
+        - generic [ref=e30]:
+          - generic [ref=e34]: Connecting...
+          - generic [ref=e35]: Safe mode
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - button "Record audio" [ref=e41]:
+            - img [ref=e42]
+          - button "Upload file" [ref=e44]:
+            - img [ref=e45]
+        - textbox "Type a message..." [ref=e48]: Hello E2E
+        - button "Checking..." [disabled] [ref=e49]
+  - contentinfo [ref=e50]:
+    - generic [ref=e52]:
+      - generic [ref=e55]: InkHaven
+      - generic [ref=e56]:
+        - link "About" [ref=e57] [cursor=pointer]:
+          - /url: /about
+        - link "FAQ" [ref=e58] [cursor=pointer]:
+          - /url: /faq
+        - link "Privacy" [ref=e59] [cursor=pointer]:
+          - /url: /legal/privacy
+        - link "Terms" [ref=e60] [cursor=pointer]:
+          - /url: /legal/terms
+        - link "Cookies" [ref=e61] [cursor=pointer]:
+          - /url: /legal/cookies
+        - link "Legal Hub" [ref=e62] [cursor=pointer]:
+          - /url: /legal
+      - generic [ref=e63]:
+        - generic [ref=e64]: © 2026 InkHaven
+        - link "GitHub" [ref=e65] [cursor=pointer]:
+          - /url: https://github.com/inkhaven
+          - generic [ref=e66]: GitHub
+          - img [ref=e67]
+  - button "Open Next.js Dev Tools" [ref=e74] [cursor=pointer]:
+    - img [ref=e75]
+  - alert [ref=e78]
+```

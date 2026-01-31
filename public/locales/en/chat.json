@@ -1,0 +1,13 @@
+{
+  "startChat": "Start Chatting",
+  "joinRoom": "Join Room",
+  "sendMessage": "Send Message",
+  "typeMessage": "Type your message...",
+  "online": "Online",
+  "offline": "Offline",
+  "users": "Users",
+  "messages": "Messages",
+  "room": "Room",
+  "leaveRoom": "Leave Room",
+  "createRoom": "Create Room"
+}

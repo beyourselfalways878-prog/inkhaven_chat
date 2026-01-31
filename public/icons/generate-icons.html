@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        }
+    </style>
+</head>
+<body>
+    <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                <stop offset="50%" style="stop-color:#764ba2;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
+            </linearGradient>
+            <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#22d3ee;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+            </linearGradient>
+        </defs>
+        <circle cx="256" cy="256" r="256" fill="url(#bg)"/>
+        <path d="M 140 200 Q 140 160 180 160 L 260 160 Q 300 160 300 200 L 300 260 Q 300 300 260 300 L 200 300 L 160 340 L 160 300 Q 140 300 140 260 Z" 
+              fill="url(#iconGradient)" opacity="0.9"/>
+        <path d="M 212 252 Q 212 212 252 212 L 332 212 Q 372 212 372 252 L 372 312 Q 372 352 332 352 L 352 392 L 312 352 L 252 352 Q 212 352 212 312 Z" 
+              fill="white" opacity="0.95"/>
+        <circle cx="200" cy="230" r="8" fill="white" opacity="0.8"/>
+        <circle cx="230" cy="230" r="8" fill="white" opacity="0.8"/>
+        <circle cx="260" cy="230" r="8" fill="white" opacity="0.8"/>
+        <circle cx="380" cy="140" r="6" fill="white" opacity="0.7"/>
+        <circle cx="420" cy="180" r="4" fill="white" opacity="0.6"/>
+        <circle cx="360" cy="420" r="5" fill="white" opacity="0.5"/>
+        <circle cx="100" cy="380" r="4" fill="white" opacity="0.6"/>
+    </svg>
+</body>
+</html>

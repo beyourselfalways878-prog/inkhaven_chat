@@ -1,0 +1,13 @@
+{
+  "startChat": "Empezar a Chatear",
+  "joinRoom": "Unirse a Sala",
+  "sendMessage": "Enviar Mensaje",
+  "typeMessage": "Escribe tu mensaje...",
+  "online": "En Línea",
+  "offline": "Desconectado",
+  "users": "Usuarios",
+  "messages": "Mensajes",
+  "room": "Sala",
+  "leaveRoom": "Salir de Sala",
+  "createRoom": "Crear Sala"
+}

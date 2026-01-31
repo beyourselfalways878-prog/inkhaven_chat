@@ -1,0 +1,18 @@
+{
+  "welcome": "Bienvenido",
+  "loading": "Cargando...",
+  "error": "Error",
+  "retry": "Intentar de Nuevo",
+  "cancel": "Cancelar",
+  "confirm": "Confirmar",
+  "save": "Guardar",
+  "delete": "Eliminar",
+  "edit": "Editar",
+  "back": "Atrás",
+  "next": "Siguiente",
+  "previous": "Anterior",
+  "close": "Cerrar",
+  "open": "Abrir",
+  "yes": "Sí",
+  "no": "No"
+}

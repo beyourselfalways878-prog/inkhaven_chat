@@ -1,0 +1,76 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "InkHaven Anonymous sanctuary" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]:
+          - generic [ref=e7]: InkHaven
+          - generic [ref=e8]: Anonymous sanctuary
+      - navigation [ref=e9]:
+        - link "Onboarding" [ref=e10] [cursor=pointer]:
+          - /url: /onboarding
+        - link "Quick Match" [ref=e11] [cursor=pointer]:
+          - /url: /quick-match
+        - link "Settings" [ref=e12] [cursor=pointer]:
+          - /url: /settings
+        - link "Moderation" [ref=e13] [cursor=pointer]:
+          - /url: /moderation
+        - link "About" [ref=e14] [cursor=pointer]:
+          - /url: /about
+      - generic [ref=e15]:
+        - button "Switch to dark mode" [ref=e16]:
+          - img [ref=e17]
+          - img
+          - img [ref=e20]
+        - link "Enter chat" [ref=e21] [cursor=pointer]:
+          - /url: /chat
+        - link "Create profile" [ref=e22] [cursor=pointer]:
+          - /url: /onboarding
+  - main [ref=e23]:
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - generic [ref=e28]: Instant matching
+          - heading "Quick Match" [level=2] [ref=e29]
+          - paragraph [ref=e30]: Choose the vibe you need right now. We’ll pair you with someone aligned.
+        - button "Start Match" [ref=e31]
+      - generic [ref=e32]:
+        - button "Casual Light conversation and gentle connection. Selected" [ref=e33]:
+          - generic [ref=e34]: Casual
+          - generic [ref=e35]: Light conversation and gentle connection.
+          - generic [ref=e36]: Selected
+        - button "Deep Meaningful, reflective dialogue." [ref=e37]:
+          - generic [ref=e38]: Deep
+          - generic [ref=e39]: Meaningful, reflective dialogue.
+        - button "Support A safe space to be heard." [ref=e40]:
+          - generic [ref=e41]: Support
+          - generic [ref=e42]: A safe space to be heard.
+  - contentinfo [ref=e43]:
+    - generic [ref=e45]:
+      - generic [ref=e48]: InkHaven
+      - generic [ref=e49]:
+        - link "About" [ref=e50] [cursor=pointer]:
+          - /url: /about
+        - link "FAQ" [ref=e51] [cursor=pointer]:
+          - /url: /faq
+        - link "Privacy" [ref=e52] [cursor=pointer]:
+          - /url: /legal/privacy
+        - link "Terms" [ref=e53] [cursor=pointer]:
+          - /url: /legal/terms
+        - link "Cookies" [ref=e54] [cursor=pointer]:
+          - /url: /legal/cookies
+        - link "Legal Hub" [ref=e55] [cursor=pointer]:
+          - /url: /legal
+      - generic [ref=e56]:
+        - generic [ref=e57]: © 2026 InkHaven
+        - link "GitHub" [ref=e58] [cursor=pointer]:
+          - /url: https://github.com/inkhaven
+          - generic [ref=e59]: GitHub
+          - img [ref=e60]
+  - button "Open Next.js Dev Tools" [ref=e67] [cursor=pointer]:
+    - img [ref=e68]
+  - alert [ref=e71]
+```

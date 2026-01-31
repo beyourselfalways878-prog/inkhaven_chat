@@ -1,0 +1,31 @@
+.vercel
+
+# Dependencies
+node_modules
+
+# Environment files (never commit)
+.env
+.env.*
+!.env.example
+
+# Next.js
+.next
+
+# Test/coverage artifacts
+coverage
+
+# Cypress artifacts
+cypress/videos
+cypress/screenshots
+
+# App logs folder
+logs
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+
+# Logs
+*.log
+
+# Sentry Config File
+.env.sentry-build-plugin
