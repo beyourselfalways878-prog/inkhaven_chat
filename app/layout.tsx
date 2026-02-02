@@ -4,6 +4,8 @@ import Providers from '../components/Providers';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import ModerationGate from '../components/ModerationGate';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata = {
   title: 'InkHaven Chat',
@@ -21,7 +23,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Footer />
           </ModerationGate>
         </Providers>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
 }
+
