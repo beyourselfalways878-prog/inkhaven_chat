@@ -2,15 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useToast } from '../../components/ui/toast';
+import { Settings, User, SlidersHorizontal, Shield, Volume2, Eye, Keyboard, Info } from 'lucide-react';
 
 export default function SettingsPage() {
+  const toast = useToast();
   const [preferences, setPreferences] = useState({
     readReceipts: true,
     typingPrivacy: true,
     safetyFilter: true,
     soundEffects: false,
   });
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('inkhaven:preferences');
@@ -28,77 +30,131 @@ export default function SettingsPage() {
     setPreferences((prev) => {
       const next = { ...prev, [key]: !prev[key] };
       localStorage.setItem('inkhaven:preferences', JSON.stringify(next));
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      toast.success(`${key === 'readReceipts' ? 'Read receipts' : key === 'typingPrivacy' ? 'Typing privacy' : key === 'safetyFilter' ? 'Safety filter' : 'Sound effects'} ${next[key] ? 'enabled' : 'disabled'}`);
       return next;
     });
   };
+
+  const settingsMeta = [
+    { key: 'readReceipts', title: 'Read receipts', desc: 'Let partners see when you read.', icon: Eye },
+    { key: 'typingPrivacy', title: 'Typing privacy', desc: 'Delay typing indicators for calm pacing.', icon: Keyboard },
+    { key: 'safetyFilter', title: 'Safety filter', desc: 'Auto-block unsafe content in real time.', icon: Shield },
+    { key: 'soundEffects', title: 'Sound effects', desc: 'Subtle audio cues during chat.', icon: Volume2 },
+  ] as const;
 
   return (
     <div className="container mx-auto px-6 py-10">
       <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] items-start">
         <section className="card p-6">
-          <h2 className="text-3xl font-semibold">Settings</h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <div className="flex items-center gap-3 mb-2">
+            <Settings className="w-6 h-6 text-indigo-400" />
+            <h2 className="text-3xl font-semibold text-white">Settings</h2>
+          </div>
+          <p className="mt-2 text-sm text-white/50">
             Customize your InkHaven experience.
           </p>
 
-          <div className="mt-6 space-y-3 text-sm text-slate-600">
-            <Link href="/profile" className="block rounded-xl border border-slate-200 bg-white/80 px-4 py-3 hover:bg-slate-50 transition">
-              <div className="font-semibold text-slate-900">Profile</div>
-              <div className="text-xs">Manage your identity and interests</div>
+          <div className="mt-6 space-y-3">
+            <Link href="/profile" className="block rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.06] transition group">
+              <div className="flex items-center gap-3">
+                <User className="w-5 h-5 text-indigo-400 group-hover:text-indigo-300 transition" />
+                <div>
+                  <div className="font-semibold text-white text-sm">Profile</div>
+                  <div className="text-xs text-white/40">Manage your identity and interests</div>
+                </div>
+              </div>
             </Link>
-            <Link href="/onboarding/preferences" className="block rounded-xl border border-slate-200 bg-white/80 px-4 py-3 hover:bg-slate-50 transition">
-              <div className="font-semibold text-slate-900">Preferences</div>
-              <div className="text-xs">Privacy and experience controls</div>
+            <Link href="/onboarding/preferences" className="block rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.06] transition group">
+              <div className="flex items-center gap-3">
+                <SlidersHorizontal className="w-5 h-5 text-purple-400 group-hover:text-purple-300 transition" />
+                <div>
+                  <div className="font-semibold text-white text-sm">Preferences</div>
+                  <div className="text-xs text-white/40">Privacy and experience controls</div>
+                </div>
+              </div>
             </Link>
           </div>
         </section>
 
         <section className="glass p-6">
           <div className="card p-6 space-y-4">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold">Privacy & Experience</h3>
-              {saved && (
-                <span className="text-xs text-emerald-600 font-medium">Saved</span>
-              )}
+            <h3 className="text-lg font-semibold text-white mb-6">Privacy & Experience</h3>
+
+            {settingsMeta.map((item) => {
+              const Icon = item.icon;
+              const isOn = preferences[item.key];
+              return (
+                <button
+                  key={item.key}
+                  className="w-full rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3 text-left hover:bg-white/[0.06] transition"
+                  onClick={() => update(item.key)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Icon className={`w-4 h-4 ${isOn ? 'text-indigo-400' : 'text-white/20'} transition`} />
+                      <div>
+                        <div className="text-sm font-semibold text-white">{item.title}</div>
+                        <div className="text-xs text-white/40">{item.desc}</div>
+                      </div>
+                    </div>
+                    <span className={`h-6 w-10 rounded-full ${isOn ? 'bg-indigo-500' : 'bg-white/10'} relative transition`}>
+                      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${isOn ? 'right-0.5' : 'left-0.5'}`} />
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+
+            <div className="pt-4 pb-2">
+              <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider text-xs">Visual Experience</h3>
             </div>
 
-            {[
-              { key: 'readReceipts', title: 'Read receipts', desc: 'Let partners see when you read.' },
-              { key: 'typingPrivacy', title: 'Typing privacy', desc: 'Delay typing indicators for calm pacing.' },
-              { key: 'safetyFilter', title: 'Safety filter', desc: 'Auto-block unsafe content in real time.' },
-              { key: 'soundEffects', title: 'Sound effects', desc: 'Subtle audio cues during chat.' },
-            ].map((item) => (
-              <button
-                key={item.key}
-                className="w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-left hover:bg-slate-50 transition"
-                onClick={() => update(item.key as any)}
-              >
-                <div className="flex items-center justify-between">
+            <button
+              className="w-full rounded-2xl border border-white/5 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 px-4 py-3 text-left hover:from-indigo-500/20 hover:to-purple-500/20 transition group"
+              onClick={() => toast.info('Aura intensity is now adaptive to your typing speed!')}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 animate-pulse flex items-center justify-center text-xs">✨</div>
                   <div>
-                    <div className="text-sm font-semibold text-slate-900">{item.title}</div>
-                    <div className="text-xs text-slate-500">{item.desc}</div>
+                    <div className="text-sm font-semibold text-white">Resonant Aura</div>
+                    <div className="text-xs text-white/40">Dynamic background reacts to your vibe</div>
                   </div>
-                  <span className={`h-6 w-10 rounded-full ${preferences[item.key as keyof typeof preferences] ? 'bg-emerald-500' : 'bg-slate-200'} relative transition`}>
-                    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${preferences[item.key as keyof typeof preferences] ? 'right-0.5' : 'left-0.5'}`} />
-                  </span>
                 </div>
-              </button>
-            ))}
+                <div className="text-xs text-indigo-300 font-medium bg-indigo-500/10 px-2 py-1 rounded-full border border-indigo-500/20">Active</div>
+              </div>
+            </button>
 
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <h4 className="text-sm font-semibold text-slate-900 mb-3">About InkHaven</h4>
-              <div className="space-y-2 text-xs text-slate-600">
+            <div className="pt-6 pb-2">
+              <h3 className="text-sm font-semibold text-red-400/80 uppercase tracking-wider text-xs">Danger Zone</h3>
+            </div>
+
+            <button
+              className="w-full rounded-2xl border border-red-500/10 bg-red-500/5 px-4 py-3 text-left hover:bg-red-500/10 transition group"
+              onClick={() => toast.error('Account deletion not available in demo mode.')}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-400">⚠️</div>
+                  <div>
+                    <div className="text-sm font-semibold text-red-400 group-hover:text-red-300 transition">Delete Account</div>
+                    <div className="text-xs text-red-400/40">Permanently erase all data</div>
+                  </div>
+                </div>
+              </div>
+            </button>
+
+            <div className="mt-6 pt-6 border-t border-white/5">
+              <div className="flex items-center gap-2 mb-3">
+                <Info className="w-4 h-4 text-white/30" />
+                <h4 className="text-sm font-semibold text-white">About InkHaven</h4>
+              </div>
+              <div className="space-y-2 text-xs text-white/40">
                 <p>Version 1.0.0</p>
                 <p>Built with privacy and safety in mind.</p>
                 <div className="mt-4 flex gap-3">
-                  <Link href="/faq" className="text-indigo-600 hover:text-indigo-700">
-                    FAQ
-                  </Link>
-                  <Link href="/about" className="text-indigo-600 hover:text-indigo-700">
-                    About
-                  </Link>
+                  <Link href="/faq" className="text-indigo-400 hover:text-indigo-300 transition">FAQ</Link>
+                  <Link href="/about" className="text-indigo-400 hover:text-indigo-300 transition">About</Link>
                 </div>
               </div>
             </div>

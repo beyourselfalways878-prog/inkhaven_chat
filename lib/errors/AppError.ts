@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /**
  * Application Error Classes
  * Professional error handling with proper hierarchy

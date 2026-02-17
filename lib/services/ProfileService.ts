@@ -106,12 +106,29 @@ export class ProfileService {
             updatePayload.updated_at = new Date().toISOString();
 
             // Update profile
-            const { data, error } = await supabaseAdmin
+            let { data, error } = await supabaseAdmin
                 .from('profiles')
                 .update(updatePayload)
                 .eq('id', userId)
                 .select()
                 .single();
+
+            // If profile doesn't exist, create it and retry update
+            if (!data) {
+                logger.info('Profile not found during update, creating new one', { userId });
+                await this.createProfile(userId, validated.displayName);
+
+                // Retry update
+                const res = await supabaseAdmin
+                    .from('profiles')
+                    .update(updatePayload)
+                    .eq('id', userId)
+                    .select()
+                    .single();
+
+                data = res.data;
+                error = res.error;
+            }
 
             if (error || !data) {
                 throw new ValidationError('Failed to update profile');

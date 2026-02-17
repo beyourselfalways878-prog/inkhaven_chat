@@ -1,11 +1,12 @@
-import type { MetadataRoute } from 'next'
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.inkhaven.in'
+import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: '*', allow: '/' }],
-    sitemap: [`${siteUrl.replace(/\/$/, '')}/sitemap.xml`],
-    host: siteUrl.replace(/\/$/, ''),
-  }
+    rules: {
+      userAgent: '*',
+      allow: '/',
+      disallow: ['/chat/', '/profile/'],
+    },
+    sitemap: 'https://www.inkhaven.in/sitemap.xml',
+  };
 }

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /**
  * API Error Handler Middleware
  * Professional error handling for Next.js API routes
@@ -5,7 +6,7 @@
 
 import { NextResponse } from 'next/server';
 import { ZodError } from 'zod';
-import { AppError, isAppError, isError } from '../errors/AppError';
+import { isAppError, isError } from '../errors/AppError';
 import { logger } from '../logger/Logger';
 
 export interface ErrorResponse {
@@ -113,7 +114,7 @@ export function handleApiError(error: unknown, requestId?: string): NextResponse
 /**
  * Wrap API handler with error handling
  */
-export function withErrorHandler<T extends (...args: any[]) => Promise<any>>(
+export function withErrorHandler<T extends (..._args: any[]) => Promise<any>>(
     handler: T
 ): T {
     return (async (...args: any[]) => {

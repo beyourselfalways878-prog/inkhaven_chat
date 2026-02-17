@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface KarmaBadgeProps {
     karma: number;
@@ -19,7 +19,7 @@ function getKarmaTier(karma: number): { tier: KarmaTier; label: string; color: s
 }
 
 export default function KarmaBadge({ karma, size = 'md', showLabel = true }: KarmaBadgeProps) {
-    const { tier, label, color, emoji } = getKarmaTier(karma);
+    const { label, color, emoji } = getKarmaTier(karma);
 
     const sizeClasses = {
         sm: 'text-xs px-2 py-0.5',

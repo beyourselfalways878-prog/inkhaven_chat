@@ -1,9 +1,8 @@
+/* eslint-disable no-unused-vars */
 /**
  * Structured Logger
- * Professional-grade logging with Sentry integration
+ * Professional-grade logging with console output
  */
-
-import * as Sentry from '@sentry/nextjs';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -30,29 +29,8 @@ export class StructuredLogger implements Logger {
             ...context
         };
 
-        // Log to console in development
-        if (process.env.NODE_ENV === 'development') {
-            const logFn = console[level] || console.log;
-            logFn(`[${this.service}] ${message}`, context || '');
-        }
-
-        // Send to Sentry for errors and warnings
-        if (level === 'error') {
-            Sentry.captureException(new Error(message), {
-                level: 'error',
-                tags: { service: this.service },
-                extra: context
-            });
-        } else if (level === 'warn') {
-            Sentry.captureMessage(message, {
-                level: 'warning',
-                tags: { service: this.service },
-                extra: context
-            });
-        }
-
-        // In production, you might want to send to a logging service
-        // Example: LogRocket, DataDog, etc.
+        const logFn = console[level] || console.log;
+        logFn(`[${this.service}]`, logEntry);
     }
 
     debug(message: string, context?: LogContext): void {

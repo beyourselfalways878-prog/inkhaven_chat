@@ -22,7 +22,7 @@ export function usePresence(
     const [presenceState, setPresenceState] = useState<Record<string, PresenceUser[]>>({});
     const [onlineUsers, setOnlineUsers] = useState<PresenceUser[]>([]);
     const [isConnected, setIsConnected] = useState(false);
-    const activityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const activityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Extract online users from presence state
     useEffect(() => {

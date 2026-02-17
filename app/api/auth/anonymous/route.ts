@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { handleApiError, generateRequestId } from '../../../../lib/middleware/errorHandler';
 import { logger } from '../../../../lib/logger/Logger';
-import { rateLimitPersistent } from '../../../../lib/rateLimitPersistent';
+import { rateLimit } from '../../../../lib/rateLimit';
 import { profileService } from '../../../../lib/services/ProfileService';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     // Rate limiting
     const ip = req.headers.get('x-forwarded-for') ?? 'local';
-    const limit = await rateLimitPersistent(`auth:anonymous:${ip}`, 20, 60);
+    const limit = await rateLimit(`auth:anonymous:${ip}`, 20, 60);
 
     if (!limit.allowed) {
       return NextResponse.json(

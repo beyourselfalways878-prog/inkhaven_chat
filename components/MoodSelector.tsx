@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 "use client";
 
 import React from 'react';
@@ -7,7 +8,7 @@ export type Mood = 'chill' | 'deep' | 'fun' | 'vent' | 'curious';
 
 interface MoodSelectorProps {
     value: Mood | null;
-    onChange: (mood: Mood) => void;
+    onChange: (_mood: Mood) => void;
     compact?: boolean;
 }
 

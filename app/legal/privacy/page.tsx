@@ -33,8 +33,8 @@ export default function PrivacyPolicyPage() {
                     <h2 className="text-2xl font-semibold mt-8 mb-4">2. Data Controller</h2>
                     <p>
                         <strong>InkHaven</strong><br />
-                        Email: <a href="mailto:privacy@inkhaven.in" className="text-indigo-600 hover:underline">privacy@inkhaven.in</a><br />
-                        Support: <a href="mailto:support@inkhaven.in" className="text-indigo-600 hover:underline">support@inkhaven.in</a>
+                        Email: <a href="mailto:namamicreations@zenithcryptoai.in" className="text-indigo-600 hover:underline">namamicreations@zenithcryptoai.in</a><br />
+                        Support: <a href="mailto:namamicreations@zenithcryptoai.in" className="text-indigo-600 hover:underline">namamicreations@zenithcryptoai.in</a>
                     </p>
                 </section>
 
@@ -130,7 +130,7 @@ export default function PrivacyPolicyPage() {
                         <li><strong>Right to Withdraw Consent:</strong> Withdraw consent at any time</li>
                     </ul>
                     <p className="mt-4">
-                        To exercise these rights, contact us at <a href="mailto:privacy@inkhaven.in" className="text-indigo-600 hover:underline">privacy@inkhaven.in</a>. We will respond within 30 days.
+                        To exercise these rights, contact us at <a href="mailto:namamicreations@zenithcryptoai.in" className="text-indigo-600 hover:underline">namamicreations@zenithcryptoai.in</a>. We will respond within 30 days.
                     </p>
                 </section>
 
@@ -187,8 +187,8 @@ export default function PrivacyPolicyPage() {
                     <h2 className="text-2xl font-semibold mt-8 mb-4">13. Contact Us</h2>
                     <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-6">
                         <p className="m-0">
-                            <strong>Privacy Inquiries:</strong> <a href="mailto:privacy@inkhaven.in" className="text-indigo-600 hover:underline">privacy@inkhaven.in</a><br />
-                            <strong>General Support:</strong> <a href="mailto:support@inkhaven.in" className="text-indigo-600 hover:underline">support@inkhaven.in</a><br />
+                            <strong>Privacy Inquiries:</strong> <a href="mailto:namamicreations@zenithcryptoai.in" className="text-indigo-600 hover:underline">namamicreations@zenithcryptoai.in</a><br />
+                            <strong>General Support:</strong> <a href="mailto:namamicreations@zenithcryptoai.in" className="text-indigo-600 hover:underline">namamicreations@zenithcryptoai.in</a><br />
                             <strong>Website:</strong> <Link href="https://www.inkhaven.in" className="text-indigo-600 hover:underline">www.inkhaven.in</Link>
                         </p>
                     </div>

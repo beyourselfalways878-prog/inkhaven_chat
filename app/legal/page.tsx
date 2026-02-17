@@ -23,6 +23,13 @@ export default function LegalIndexPage() {
             gradient: 'from-violet-500 to-pink-500'
         },
         {
+            title: 'Community Guidelines',
+            description: 'Our core principles for a safe and respectful community. Read before chatting.',
+            href: '/legal/rules',
+            icon: '🛡️',
+            gradient: 'from-emerald-500 to-teal-500'
+        },
+        {
             title: 'Cookie Policy',
             description: 'Information about cookies and similar technologies we use on our platform.',
             href: '/legal/cookies',
@@ -77,16 +84,16 @@ export default function LegalIndexPage() {
                 </p>
                 <div className="flex flex-wrap gap-4">
                     <a
-                        href="mailto:legal@inkhaven.in"
+                        href="mailto:namamicreations@zenithcryptoai.in"
                         className="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors"
                     >
-                        ✉️ legal@inkhaven.in
+                        ✉️ namamicreations@zenithcryptoai.in
                     </a>
                     <a
-                        href="mailto:privacy@inkhaven.in"
+                        href="mailto:namamicreations@zenithcryptoai.in"
                         className="inline-flex items-center px-4 py-2 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-medium hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
                     >
-                        🔐 privacy@inkhaven.in
+                        🔐 namamicreations@zenithcryptoai.in
                     </a>
                 </div>
             </div>

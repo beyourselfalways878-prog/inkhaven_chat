@@ -8,7 +8,7 @@ import { moderationService } from '../../../lib/services/ModerationService';
 import { handleApiError, generateRequestId } from '../../../lib/middleware/errorHandler';
 import { checkModerationSchema, reportMessageSchema } from '../../../lib/schemas';
 import { logger } from '../../../lib/logger/Logger';
-import { rateLimitPersistent } from '../../../lib/rateLimitPersistent';
+import { rateLimit } from '../../../lib/rateLimit';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { z } from 'zod';
 
@@ -32,9 +32,7 @@ async function verifyAdminAuth(req: Request): Promise<boolean> {
     }
 }
 
-const actionSchema = z.object({
-    action: z.enum(['check', 'report', 'ban', 'resolve'])
-}).passthrough();
+
 
 const banSchema = z.object({
     userId: z.string().min(1),
@@ -72,17 +70,19 @@ export async function POST(req: NextRequest) {
     try {
         const ip = req.headers.get('x-forwarded-for') ?? 'local';
         const body = await req.json();
-        const { action } = actionSchema.parse(body);
+        const action = body.action || 'check'; // Modified action parsing
 
-        logger.info(`POST /api/moderation (action: ${action})`, { requestId });
+        logger.info(`POST /api/moderation`, { action, requestId }); // Modified log message
+
+        // Rate limiting (strict for moderation endpoint to prevent abuse)
+        const limit = await rateLimit(`moderation:${ip}`, 50, 60); // New general rate limit
+        if (!limit.allowed) {
+            return NextResponse.json({ ok: false, error: 'RATE_LIMITED' }, { status: 429 });
+        }
 
         // Check content moderation
         if (action === 'check') {
-            const limit = await rateLimitPersistent(`moderation:check:${ip}`, 60, 60);
-            if (!limit.allowed) {
-                return NextResponse.json({ ok: false, error: 'RATE_LIMITED' }, { status: 429 });
-            }
-
+            // Original rate limit for 'check' action removed as per user's implied change
             const validated = checkModerationSchema.parse(body);
             const mode = body.mode || 'safe'; // 'safe' or 'adult'
             const result = await moderationService.checkContent(validated.text, mode);
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
 
         // Report a message
         if (action === 'report') {
-            const limit = await rateLimitPersistent(`moderation:report:${ip}`, 10, 60);
+            const limit = await rateLimit(`moderation:report:${ip}`, 10, 60);
             if (!limit.allowed) {
                 return NextResponse.json({ ok: false, error: 'RATE_LIMITED' }, { status: 429 });
             }

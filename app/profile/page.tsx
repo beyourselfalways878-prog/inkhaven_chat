@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSessionStore } from '../../stores/useSessionStore';
 import InterestSelector from '../../components/Profile/InterestSelector';
+import { Avatar } from '../../components/ui/avatar';
+import { KarmaLevel } from '../../components/ui/badge';
+import { InkAura } from '../../components/InkAura';
+import { useToast } from '../../components/ui/toast';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -11,6 +15,7 @@ export default function ProfilePage() {
   const setSession = useSessionStore((s) => s.setSession);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
   const handleProfileUpdate = async (data: any) => {
     setLoading(true);
@@ -27,7 +32,7 @@ export default function ProfilePage() {
       });
 
       if (res.ok) {
-        const json = await res.json();
+        await res.json();
         setSession({
           ...session,
           displayName: data.displayName,
@@ -35,9 +40,13 @@ export default function ProfilePage() {
           comfortLevel: data.comfortLevel
         });
         setIsEditing(false);
+        toast.success('Profile updated successfully!');
+      } else {
+        toast.error('Failed to update profile. Try again.');
       }
     } catch (err) {
       console.error('Failed to update profile:', err);
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -46,54 +55,65 @@ export default function ProfilePage() {
   if (!session.userId) {
     return (
       <div className="container mx-auto px-6 py-10">
-        <div className="card p-6 text-center">
-          <p className="text-slate-600">Please log in to view your profile.</p>
+        <div className="card p-10 text-center">
+          <p className="text-white/60">Please create your profile to continue.</p>
           <button
             onClick={() => router.push('/onboarding')}
-            className="mt-4 rounded bg-indigo-600 text-white px-4 py-2"
+            className="btn-primary mt-6"
           >
-            Go to Onboarding
+            Get Started
           </button>
         </div>
       </div>
     );
   }
 
+  const auraSeed = session.auraSeed ?? hashCode(session.userId);
+  const reputation = session.reputation ?? 50;
+
   return (
     <div className="container mx-auto px-6 py-10">
       <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] items-start">
         <section className="card p-6">
-          <h2 className="text-3xl font-semibold">Your Profile</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            Manage your anonymous identity and preferences.
-          </p>
-
-          <div className="mt-6 space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3">
-              <div className="text-xs text-slate-500">Ink ID</div>
-              <div className="text-lg font-mono font-semibold text-slate-900">{session.inkId}</div>
+          {/* Aura + Avatar hero */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="relative">
+              <InkAura seed={auraSeed} reputation={reputation} size="lg" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Avatar
+                  userId={session.userId}
+                  displayName={session.displayName || undefined}
+                  auraSeed={auraSeed}
+                  reputation={reputation}
+                  size="lg"
+                />
+              </div>
             </div>
-
-            <div className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3">
-              <div className="text-xs text-slate-500">Display Name</div>
-              <div className="text-lg font-semibold text-slate-900">{session.displayName || 'Not set'}</div>
+            <h2 className="mt-4 text-2xl font-semibold text-white">
+              {session.displayName || 'Anonymous'}
+            </h2>
+            <div className="mt-1 text-sm text-white/40 font-mono">{session.inkId}</div>
+            <div className="mt-3">
+              <KarmaLevel reputation={reputation} />
             </div>
+          </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3">
-              <div className="text-xs text-slate-500">Comfort Level</div>
-              <div className="text-lg font-semibold text-slate-900 capitalize">
+          <div className="space-y-3">
+            <div className="rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3">
+              <div className="text-xs text-white/40">Comfort Level</div>
+              <div className="text-base font-medium text-white capitalize">
                 {(session.comfortLevel as string) || 'Not set'}
               </div>
             </div>
 
             {session.interests && session.interests.length > 0 && (
-              <div className="rounded-xl border border-slate-200 bg-white/80 px-4 py-3">
-                <div className="text-xs text-slate-500 mb-2">Interests</div>
+              <div className="rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3">
+                <div className="text-xs text-white/40 mb-2">Interests</div>
                 <div className="flex flex-wrap gap-2">
                   {session.interests.map((interest: string) => (
                     <span
                       key={interest}
-                      className="inline-block rounded-full bg-indigo-100 text-indigo-700 px-3 py-1 text-xs font-medium"
+                      className="inline-block rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/20 px-3 py-1 text-xs font-medium"
                     >
                       {interest}
                     </span>
@@ -105,7 +125,7 @@ export default function ProfilePage() {
 
           <button
             onClick={() => setIsEditing(!isEditing)}
-            className="mt-6 rounded-full bg-slate-900 text-white px-5 py-2"
+            className={`mt-6 w-full ${isEditing ? 'btn-secondary' : 'btn-primary'}`}
           >
             {isEditing ? 'Cancel' : 'Edit Profile'}
           </button>
@@ -114,7 +134,10 @@ export default function ProfilePage() {
         {isEditing && (
           <section className="glass p-6">
             <div className="card p-6">
-              <h3 className="text-lg font-semibold">Update Profile</h3>
+              <h3 className="text-lg font-semibold text-white flex items-center justify-between">
+                <span>Update Profile</span>
+                {loading && <span className="text-sm text-indigo-400">Saving...</span>}
+              </h3>
               <div className="mt-6">
                 <InterestSelector
                   onSubmit={handleProfileUpdate}
@@ -131,4 +154,13 @@ export default function ProfilePage() {
       </div>
     </div>
   );
+}
+
+function hashCode(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
 }

@@ -1,10 +1,12 @@
+import { BuyMeACoffee } from '../../components/BuyMeACoffee';
+
 export default function AboutPage() {
   return (
     <main className="max-w-4xl mx-auto px-4 py-12 space-y-6">
       <h1 className="text-3xl font-bold">About InkHaven</h1>
       <p className="text-slate-300">
         InkHaven is a modern anonymous chat platform that prioritizes safety, privacy, and meaningful connections.
-        Founded in 2024, we have helped millions of users connect with like-minded people worldwide.
+        Created by <strong>Twinkle Tiwari</strong>, our mission is to help millions of users connect with like-minded people worldwide.
       </p>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -52,9 +54,32 @@ export default function AboutPage() {
         </div>
       </div>
 
+      <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-2xl p-8 text-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+        <h2 className="text-2xl font-bold mb-6 text-white">A Message from the Creator</h2>
+        <div className="max-w-2xl mx-auto space-y-4 text-slate-300 italic">
+          <p>
+            &quot;InkHaven was born from a simple belief: in a world of noise, we all deserve a quiet corner to just <em>be</em>.
+          </p>
+          <p>
+            I built this sanctuary not as a product, but as a promise—a promise that your voice matters, your privacy is sacred, and your connection with others can be genuine without the weight of an identity. Every line of code was written with the hope that someone, somewhere, would find a friend, a listener, or a moment of peace here.
+          </p>
+          <p>
+            If this space has brought a little light to your day, and you&apos;d like to help keep it glowing, you can support my work below. But more than that, thank you for being here. You are the heartbeat of InkHaven.&quot;
+          </p>
+          <div className="mt-4 font-semibold text-white not-italic">
+            — Twinkle Tiwari
+          </div>
+        </div>
+
+        <div className="mt-8 flex justify-center">
+          <BuyMeACoffee />
+        </div>
+      </div>
+
       <div className="text-center">
         <p className="text-slate-400">
-          Have questions? Check out our <a href="/faq" className="text-blue-400 hover:underline">FAQ</a> or <a href="/contact" className="text-blue-400 hover:underline">contact us</a>.
+          Have questions? Check out our <a href="/faq" className="text-blue-400 hover:underline">FAQ</a> or <a href="mailto:namamicreations@zenithcryptoai.in" className="text-blue-400 hover:underline">contact us</a>.
         </p>
       </div>
     </main>

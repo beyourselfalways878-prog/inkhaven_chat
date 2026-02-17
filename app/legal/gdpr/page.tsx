@@ -40,7 +40,7 @@ export default function GDPRPage() {
                         <p className="m-0">
                             <strong>Data Controller:</strong> InkHaven<br />
                             <strong>Email:</strong> <a href="mailto:dpo@inkhaven.in" className="text-indigo-600 hover:underline">dpo@inkhaven.in</a><br />
-                            <strong>Privacy Email:</strong> <a href="mailto:privacy@inkhaven.in" className="text-indigo-600 hover:underline">privacy@inkhaven.in</a><br />
+                            <strong>Privacy Email:</strong> <a href="mailto:namamicreations@zenithcryptoai.in" className="text-indigo-600 hover:underline">namamicreations@zenithcryptoai.in</a><br />
                             <strong>Website:</strong> <Link href="https://www.inkhaven.in" className="text-indigo-600 hover:underline">www.inkhaven.in</Link>
                         </p>
                     </div>
@@ -114,7 +114,7 @@ export default function GDPRPage() {
                     <h2 className="text-2xl font-semibold mt-8 mb-4">5. How to Exercise Your Rights</h2>
                     <p>To exercise any of your GDPR rights:</p>
                     <ol className="list-decimal pl-6 space-y-2">
-                        <li>Email us at <a href="mailto:privacy@inkhaven.in" className="text-indigo-600 hover:underline">privacy@inkhaven.in</a></li>
+                        <li>Email us at <a href="mailto:namamicreations@zenithcryptoai.in" className="text-indigo-600 hover:underline">namamicreations@zenithcryptoai.in</a></li>
                         <li>Include your Ink ID or other identifying information</li>
                         <li>Specify which right(s) you wish to exercise</li>
                         <li>We will respond within <strong>30 days</strong></li>

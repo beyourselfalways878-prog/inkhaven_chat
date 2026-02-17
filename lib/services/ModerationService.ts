@@ -8,7 +8,7 @@
 import { supabaseAdmin } from '../supabaseAdmin';
 import { MessageReport, UserBan } from '../types/domain';
 import { createLogger } from '../logger/Logger';
-import { ModerationError, NotFoundError, ValidationError } from '../errors/AppError';
+import { ModerationError, NotFoundError } from '../errors/AppError';
 import { reportMessageSchema, checkModerationSchema } from '../schemas';
 import { filterContent, containsSelfHarmContent, FilterSeverity } from '../moderation/wordFilter';
 

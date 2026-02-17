@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Button } from './ui/button';
+
 
 export default function Footer() {
     return (
@@ -16,12 +16,19 @@ export default function Footer() {
                         <Link href="/faq" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">FAQ</Link>
                         <Link href="/legal/privacy" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Privacy</Link>
                         <Link href="/legal/terms" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Terms</Link>
+                        <Link href="/legal/rules" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Rules</Link>
                         <Link href="/legal/cookies" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Cookies</Link>
                         <Link href="/legal" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Legal Hub</Link>
                     </div>
 
-                    <div className="text-sm text-slate-500 flex items-center gap-4">
-                        <span>© 2026 InkHaven</span>
+                    <div className="text-sm text-slate-500 flex flex-col md:flex-row items-center gap-4">
+                        <span className="text-center md:text-left">
+                            © 2026 InkHaven<br />
+                            <span className="text-xs">Created by Twinkle Tiwari</span>
+                        </span>
+                        <a href="mailto:namamicreations@zenithcryptoai.in" className="text-xs hover:text-indigo-600 transition-colors">
+                            namamicreations@zenithcryptoai.in
+                        </a>
                         <Link href="https://github.com/inkhaven" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-indigo-600 transition-colors text-lg">
                             <span className="sr-only">GitHub</span>
                             {/* Simple GitHub Icon SVG */}

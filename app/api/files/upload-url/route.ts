@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fileUploadService } from '../../../../lib/services/FileUploadService';
 import { handleApiError, generateRequestId } from '../../../../lib/middleware/errorHandler';
 import { logger } from '../../../../lib/logger/Logger';
-import { ValidationError } from '../../../../lib/errors/AppError';
+
 import { z } from 'zod';
 
 const requestSchema = z.object({

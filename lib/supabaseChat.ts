@@ -14,8 +14,8 @@ export type SupabaseMessage = {
 const typingChannels = new Map<string, ReturnType<typeof supabase.channel>>();
 const presenceChannels = new Map<string, ReturnType<typeof supabase.channel>>();
 
-export const sendMessageToSupabase = async (roomId: string, senderId: string, content: string) => {
-  const payload = { room_id: roomId, sender_id: senderId, content };
+export const sendMessageToSupabase = async (roomId: string, senderId: string, content: string, messageType: string = 'text') => {
+  const payload = { room_id: roomId, sender_id: senderId, content, message_type: messageType };
   const { data, error } = await supabase.from('messages').insert(payload).select().single();
   if (error) throw error;
 
@@ -106,7 +106,7 @@ export const subscribeToTypingSupabase = (
   const channel = supabase.channel(channelKey);
 
   // Track typing timeouts to auto-clear typing state
-  const typingTimeouts = new Map<string, NodeJS.Timeout>();
+  const typingTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
   channel
     .on('broadcast', { event: 'typing' }, (payload) => {

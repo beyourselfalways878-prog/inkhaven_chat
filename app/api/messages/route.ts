@@ -11,6 +11,9 @@ import { sendMessageSchema, paginationSchema } from '../../../lib/schemas';
 import { logger } from '../../../lib/logger/Logger';
 import { ValidationError } from '../../../lib/errors/AppError';
 
+import { getAuthenticatedUser } from '../../../lib/auth';
+import { AppError } from '../../../lib/errors/AppError';
+
 export async function GET(req: NextRequest) {
     const requestId = generateRequestId();
 
@@ -53,8 +56,13 @@ export async function POST(req: NextRequest) {
     try {
         logger.info('POST /api/messages', { requestId });
 
+        const user = await getAuthenticatedUser(req);
         const body = await req.json();
         const validated = sendMessageSchema.parse(body);
+
+        if (validated.senderId !== user.id) {
+            throw new AppError('Forbidden: You can only send messages as yourself', 'FORBIDDEN', 403);
+        }
 
         let message;
 

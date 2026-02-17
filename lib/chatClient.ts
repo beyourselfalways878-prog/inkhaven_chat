@@ -13,9 +13,9 @@ try {
     const sup = require('./supabaseChat');
 
     client = {
-      sendMessage: async (roomId: string, senderId: string, content: string) => {
+      sendMessage: async (roomId: string, senderId: string, content: string, messageType: string = 'text') => {
         // Optimistic push using mock shape, but persist via supabase
-        const inserted = await sup.sendMessageToSupabase(roomId, senderId, content);
+        const inserted = await sup.sendMessageToSupabase(roomId, senderId, content, messageType);
 
         // Supabase will insert message_statuses via the simulator endpoint; but we also subscribe to status table
         // to receive status updates; nothing more to do here.

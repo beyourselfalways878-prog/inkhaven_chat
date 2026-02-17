@@ -1,8 +1,10 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { Button } from '../components/ui/button';
 import { useEffect, useState } from 'react';
+import { Shield, Target, Lock, Zap, Palette, Mic } from 'lucide-react';
 
 const FloatingOrb = ({ delay, size, color, position }: { delay: number; size: string; color: string; position: string }) => (
   <div
@@ -155,37 +157,37 @@ export default function Page() {
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           <GlowingCard gradient="from-indigo-500 to-purple-500">
-            <FeatureIcon gradient="from-indigo-500 to-purple-500">🛡️</FeatureIcon>
+            <FeatureIcon gradient="from-indigo-500 to-purple-500"><Shield className="w-7 h-7" /></FeatureIcon>
             <h3 className="text-xl font-semibold mt-5 mb-3 text-slate-900 dark:text-white">AI-Powered Safety</h3>
             <p className="text-slate-600 dark:text-slate-400">Real-time content moderation protects every conversation. Harmful content is caught before it reaches you.</p>
           </GlowingCard>
 
           <GlowingCard gradient="from-emerald-500 to-teal-500">
-            <FeatureIcon gradient="from-emerald-500 to-teal-500">🎯</FeatureIcon>
+            <FeatureIcon gradient="from-emerald-500 to-teal-500"><Target className="w-7 h-7" /></FeatureIcon>
             <h3 className="text-xl font-semibold mt-5 mb-3 text-slate-900 dark:text-white">Smart Matching</h3>
             <p className="text-slate-600 dark:text-slate-400">Our AI learns from your conversations to find people who match your vibe and interests.</p>
           </GlowingCard>
 
           <GlowingCard gradient="from-pink-500 to-rose-500">
-            <FeatureIcon gradient="from-pink-500 to-rose-500">🔐</FeatureIcon>
+            <FeatureIcon gradient="from-pink-500 to-rose-500"><Lock className="w-7 h-7" /></FeatureIcon>
             <h3 className="text-xl font-semibold mt-5 mb-3 text-slate-900 dark:text-white">Zero-Knowledge Privacy</h3>
             <p className="text-slate-600 dark:text-slate-400">No emails, no phone numbers, no real names. Your identity stays completely private.</p>
           </GlowingCard>
 
           <GlowingCard gradient="from-amber-500 to-orange-500">
-            <FeatureIcon gradient="from-amber-500 to-orange-500">⚡</FeatureIcon>
+            <FeatureIcon gradient="from-amber-500 to-orange-500"><Zap className="w-7 h-7" /></FeatureIcon>
             <h3 className="text-xl font-semibold mt-5 mb-3 text-slate-900 dark:text-white">Real-Time Everything</h3>
             <p className="text-slate-600 dark:text-slate-400">Instant messages, live typing indicators, and presence status. It feels like being in the same room.</p>
           </GlowingCard>
 
           <GlowingCard gradient="from-cyan-500 to-blue-500">
-            <FeatureIcon gradient="from-cyan-500 to-blue-500">🎨</FeatureIcon>
+            <FeatureIcon gradient="from-cyan-500 to-blue-500"><Palette className="w-7 h-7" /></FeatureIcon>
             <h3 className="text-xl font-semibold mt-5 mb-3 text-slate-900 dark:text-white">Premium Design</h3>
             <p className="text-slate-600 dark:text-slate-400">A beautiful, calming interface that makes chatting a pleasure. Dark mode included.</p>
           </GlowingCard>
 
           <GlowingCard gradient="from-violet-500 to-purple-500">
-            <FeatureIcon gradient="from-violet-500 to-purple-500">🎙️</FeatureIcon>
+            <FeatureIcon gradient="from-violet-500 to-purple-500"><Mic className="w-7 h-7" /></FeatureIcon>
             <h3 className="text-xl font-semibold mt-5 mb-3 text-slate-900 dark:text-white">Voice Messages</h3>
             <p className="text-slate-600 dark:text-slate-400">Send voice notes when typing isn&apos;t enough. Express yourself naturally.</p>
           </GlowingCard>

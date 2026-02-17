@@ -103,7 +103,7 @@ export default function TermsOfServicePage() {
 
                     <h3 className="text-xl font-medium mt-6 mb-3">7.2 Refunds</h3>
                     <p>
-                        Refund requests are evaluated on a case-by-case basis. Contact <a href="mailto:support@inkhaven.in" className="text-indigo-600 hover:underline">support@inkhaven.in</a> within 7 days of purchase for refund inquiries.
+                        Refund requests are evaluated on a case-by-case basis. Contact <a href="mailto:namamicreations@zenithcryptoai.in" className="text-indigo-600 hover:underline">namamicreations@zenithcryptoai.in</a> within 7 days of purchase for refund inquiries.
                     </p>
 
                     <h3 className="text-xl font-medium mt-6 mb-3">7.3 Cancellation</h3>
@@ -188,8 +188,8 @@ export default function TermsOfServicePage() {
                     <h2 className="text-2xl font-semibold mt-8 mb-4">15. Contact</h2>
                     <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-6">
                         <p className="m-0">
-                            <strong>Legal Inquiries:</strong> <a href="mailto:legal@inkhaven.in" className="text-indigo-600 hover:underline">legal@inkhaven.in</a><br />
-                            <strong>Support:</strong> <a href="mailto:support@inkhaven.in" className="text-indigo-600 hover:underline">support@inkhaven.in</a><br />
+                            <strong>Legal Inquiries:</strong> <a href="mailto:namamicreations@zenithcryptoai.in" className="text-indigo-600 hover:underline">namamicreations@zenithcryptoai.in</a><br />
+                            <strong>Support:</strong> <a href="mailto:namamicreations@zenithcryptoai.in" className="text-indigo-600 hover:underline">namamicreations@zenithcryptoai.in</a><br />
                             <strong>Website:</strong> <Link href="https://www.inkhaven.in" className="text-indigo-600 hover:underline">www.inkhaven.in</Link>
                         </p>
                     </div>

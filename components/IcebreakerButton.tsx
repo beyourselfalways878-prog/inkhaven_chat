@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 "use client";
 
 import React, { useState, useCallback } from 'react';
@@ -34,7 +35,7 @@ const ICEBREAKERS = [
 ];
 
 interface IcebreakerButtonProps {
-    onSelect: (icebreaker: string) => void;
+    onSelect: (_icebreaker: string) => void;
     compact?: boolean;
 }
 

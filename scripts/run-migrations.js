@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Client } = require('pg');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env.local') });
 
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -13,8 +14,12 @@ async function main() {
 
   const sql = fs.readFileSync(path.join(__dirname, '..', 'database', 'schema.sql'), 'utf-8');
 
-  const client = new Client({ connectionString: databaseUrl });
+  const client = new Client({
+    connectionString: databaseUrl,
+    ssl: { rejectUnauthorized: false }
+  });
   try {
+    console.log('Connecting to database:', databaseUrl.replace(/:[^:@]+@/, ':***@'));
     await client.connect();
     console.log('Connected to database. Running migrations...');
     await client.query(sql);
@@ -22,6 +27,7 @@ async function main() {
     process.exit(0);
   } catch (err) {
     console.error('Migration failed:', err.message || err);
+    console.error('Stack:', err.stack);
     process.exit(1);
   } finally {
     await client.end();

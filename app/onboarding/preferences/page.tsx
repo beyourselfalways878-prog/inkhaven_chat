@@ -1,9 +1,12 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '../../../components/ui/toast';
+import { Eye, Keyboard, Shield, Volume2 } from 'lucide-react';
 
 export default function OnboardingPreferences() {
   const router = useRouter();
+  const toast = useToast();
   const [preferences, setPreferences] = useState({
     readReceipts: true,
     typingPrivacy: true,
@@ -31,38 +34,57 @@ export default function OnboardingPreferences() {
     });
   };
 
+  const settingsMeta = [
+    { key: 'readReceipts', title: 'Read receipts', desc: 'Let partners see when you read.', icon: Eye },
+    { key: 'typingPrivacy', title: 'Typing privacy', desc: 'Delay typing indicators for calm pacing.', icon: Keyboard },
+    { key: 'safetyFilter', title: 'Safety filter', desc: 'Auto-block unsafe content in real time.', icon: Shield },
+    { key: 'soundEffects', title: 'Sound effects', desc: 'Subtle audio cues during chat.', icon: Volume2 },
+  ] as const;
+
   return (
     <div className="container mx-auto px-6 py-10">
       <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] items-start">
         <section className="card p-6">
           <div className="pill">Step 2 of 3</div>
-          <h2 className="mt-4 text-3xl font-semibold">Set your preferences</h2>
-          <p className="mt-3 text-sm text-slate-600">Fine-tune privacy and experience controls.</p>
+          <h2 className="mt-4 text-3xl font-semibold text-white">Set your preferences</h2>
+          <p className="mt-3 text-sm text-white/50">Fine-tune privacy and experience controls.</p>
         </section>
 
         <section className="glass p-6">
-          <div className="card p-6 space-y-4">
-            {[
-              { key: 'readReceipts', title: 'Read receipts', desc: 'Let partners see when you read.' },
-              { key: 'typingPrivacy', title: 'Typing privacy', desc: 'Delay typing indicators for calm pacing.' },
-              { key: 'safetyFilter', title: 'Safety filter', desc: 'Auto-block unsafe content in real time.' },
-              { key: 'soundEffects', title: 'Sound effects', desc: 'Subtle audio cues during chat.' },
-            ].map((item) => (
-              <button key={item.key} className="w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-left" onClick={() => update(item.key as any)}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-semibold text-slate-900">{item.title}</div>
-                    <div className="text-xs text-slate-500">{item.desc}</div>
+          <div className="card p-6 space-y-3">
+            {settingsMeta.map((item) => {
+              const Icon = item.icon;
+              const isOn = preferences[item.key];
+              return (
+                <button
+                  key={item.key}
+                  className="w-full rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3 text-left hover:bg-white/[0.06] transition"
+                  onClick={() => update(item.key)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Icon className={`w-4 h-4 ${isOn ? 'text-indigo-400' : 'text-white/20'} transition`} />
+                      <div>
+                        <div className="text-sm font-semibold text-white">{item.title}</div>
+                        <div className="text-xs text-white/40">{item.desc}</div>
+                      </div>
+                    </div>
+                    <span className={`h-6 w-10 rounded-full ${isOn ? 'bg-indigo-500' : 'bg-white/10'} relative transition`}>
+                      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${isOn ? 'right-0.5' : 'left-0.5'}`} />
+                    </span>
                   </div>
-                  <span className={`h-6 w-10 rounded-full ${preferences[item.key as keyof typeof preferences] ? 'bg-emerald-500' : 'bg-slate-200'} relative`}>
-                    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow ${preferences[item.key as keyof typeof preferences] ? 'right-0.5' : 'left-0.5'}`} />
-                  </span>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
 
-            <div className="flex justify-end">
-              <button onClick={() => router.push('/onboarding/safety')} className="rounded-full bg-slate-900 px-5 py-2 text-white">
+            <div className="flex justify-end pt-4">
+              <button
+                onClick={() => {
+                  toast.success('Preferences saved!');
+                  router.push('/onboarding/safety');
+                }}
+                className="btn-primary"
+              >
                 Continue
               </button>
             </div>

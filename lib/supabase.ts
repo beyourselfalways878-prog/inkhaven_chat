@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { Database } from '../types/database.types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string | undefined;
@@ -24,7 +25,7 @@ const createMockSupabase = () => {
 };
 
 export const supabase: SupabaseClient = supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey, {
-      realtime: { params: { eventsPerSecond: 50 } }
-    })
+  ? createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    realtime: { params: { eventsPerSecond: 50 } }
+  })
   : createMockSupabase();

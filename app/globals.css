@@ -15,6 +15,17 @@ body {
     radial-gradient(1200px 600px at 10% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
     radial-gradient(900px 500px at 90% 0%, rgba(16, 185, 129, 0.12), transparent 55%),
     radial-gradient(800px 500px at 50% 100%, rgba(14, 165, 233, 0.12), transparent 50%);
+    
+  /* Mobile Optimizations */
+  overscroll-behavior-y: none; /* Prevent pull-to-refresh */
+  touch-action: manipulation; /* Remove 300ms tap delay */
+  -webkit-tap-highlight-color: transparent; /* Remove blue highlight on tap */
+  -webkit-touch-callout: none; /* Disable callout menu on long press */
+}
+
+/* Prevent auto-zoom on inputs in iOS */
+input, textarea, select {
+  font-size: 16px !important; 
 }
 
 /* Dark mode background - explicit data-theme */
@@ -85,4 +96,39 @@ body {
     background: var(--color-bg-tertiary);
     box-shadow: var(--shadow-md);
   }
+}
+
+/* Shimmer animation for skeleton loaders */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* Custom scrollbar */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

@@ -274,12 +274,14 @@ export class ChatService {
             readAt: dbMessage.read_at,
             createdAt: dbMessage.created_at,
             updatedAt: dbMessage.updated_at,
-            audioUrl: dbMessage.audio_url,
-            audioDuration: dbMessage.audio_duration,
-            fileUrl: dbMessage.file_url,
-            fileName: dbMessage.file_name,
-            fileSize: dbMessage.file_size,
-            fileMimeType: dbMessage.file_mime_type
+            metadata: {
+                fileName: dbMessage.file_name,
+                fileSize: dbMessage.file_size,
+                fileMimeType: dbMessage.file_mime_type,
+                fileUrl: dbMessage.file_url,
+                audioDuration: dbMessage.audio_duration,
+                audioUrl: dbMessage.audio_url
+            }
         };
     }
 }

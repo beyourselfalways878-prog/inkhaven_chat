@@ -2,6 +2,9 @@ import { test, expect } from '@playwright/test';
 
 test('chat send and delivery/read lifecycle', async ({ page }) => {
   await page.goto('/');
+  await page.addInitScript(() => {
+    localStorage.setItem('inkhaven:preferences', JSON.stringify({ safetyFilter: false }));
+  });
 
   // Navigate to Quick Match directly (less brittle than header click)
   await page.goto('/quick-match');
@@ -33,6 +36,6 @@ test('chat send and delivery/read lifecycle', async ({ page }) => {
   // Visual regression: capture the chat area (save for manual review)
   const chatArea = page.locator('div.card');
   await expect(chatArea).toBeVisible({ timeout: 5000 });
-  await chatArea.screenshot({ path: `test-results/chat-flow-${Date.now()}.png`, fullPage: false });
+  await chatArea.screenshot({ path: `test-results/chat-flow-${Date.now()}.png` });
   // (Baseline comparison can be added to CI when we have stable snapshots)
 });

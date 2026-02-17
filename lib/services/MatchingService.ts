@@ -14,7 +14,7 @@
 import { supabaseAdmin } from '../supabaseAdmin';
 import { MatchMode } from '../types/domain';
 import { createLogger } from '../logger/Logger';
-import { MatchingError, NotFoundError } from '../errors/AppError';
+import { MatchingError } from '../errors/AppError';
 import { enqueueMatchingSchema, findMatchSchema } from '../schemas';
 
 const logger = createLogger('MatchingService');
@@ -44,8 +44,7 @@ const MATCH_QUALITY = {
     FAIR: 0.25
 };
 
-// Cooldown for re-matching same user (in hours)
-const REMATCH_COOLDOWN_HOURS = 24;
+
 
 export class MatchingService {
     /**

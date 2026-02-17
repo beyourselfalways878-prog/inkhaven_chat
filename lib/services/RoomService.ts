@@ -6,7 +6,7 @@
 import { supabaseAdmin } from '../supabaseAdmin';
 import { ChatRoom, RoomParticipant } from '../types/domain';
 import { createLogger } from '../logger/Logger';
-import { ChatError, NotFoundError, ValidationError } from '../errors/AppError';
+import { ChatError, NotFoundError } from '../errors/AppError';
 
 const logger = createLogger('RoomService');
 
@@ -29,18 +29,15 @@ export class RoomService {
                 throw new ChatError('Failed to create room');
             }
 
-            // Add creator as participant
+            // Add creator as participant via RPC (bypasses RLS)
             const { error: participantError } = await supabaseAdmin
-                .from('room_participants')
-                .insert({
-                    room_id: room.id,
-                    user_id: userId,
-                    joined_at: new Date().toISOString(),
-                    last_seen_at: new Date().toISOString()
+                .rpc('join_room', {
+                    _room_id: room.id,
+                    _user_id: userId
                 });
 
             if (participantError) {
-                logger.warn('Failed to add participant', { roomId: room.id, userId });
+                logger.warn('Failed to add participant', { roomId: room.id, userId, error: participantError });
             }
 
             logger.info('Room created successfully', { roomId: room.id });
@@ -94,14 +91,11 @@ export class RoomService {
                 throw new NotFoundError('Room');
             }
 
-            // Add participant
+            // Add participant via RPC (bypasses RLS)
             const { error } = await supabaseAdmin
-                .from('room_participants')
-                .upsert({
-                    room_id: roomId,
-                    user_id: userId,
-                    joined_at: new Date().toISOString(),
-                    last_seen_at: new Date().toISOString()
+                .rpc('join_room', {
+                    _room_id: roomId,
+                    _user_id: userId
                 });
 
             if (error) {

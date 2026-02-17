@@ -5,14 +5,13 @@
 
 import { supabaseAdmin } from '../supabaseAdmin';
 import { createLogger } from '../logger/Logger';
-import { FileUploadError, ValidationError } from '../errors/AppError';
+import { FileUploadError } from '../errors/AppError';
 import { fileUploadSchema, audioUploadSchema } from '../schemas';
 
 const logger = createLogger('FileUploadService');
 
 // File size limits
 const FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB
-const AUDIO_SIZE_LIMIT = 10 * 1024 * 1024; // 10MB
 const AUDIO_DURATION_LIMIT = 600; // 10 minutes
 
 // Allowed file types

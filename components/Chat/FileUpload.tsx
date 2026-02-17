@@ -1,10 +1,11 @@
+/* eslint-disable no-unused-vars */
 "use client";
 
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 
 interface FileUploadProps {
-    onFileSelected: (file: File) => void;
+    onFileSelected: (_file: File) => void;
     maxSize?: number;
     acceptedTypes?: string[];
 }
@@ -24,8 +25,8 @@ export function FileUpload({
         }
 
         const fileType = file.type;
-        const fileName = file.name;
-        const ext = fileName.split('.').pop()?.toLowerCase();
+
+
 
         // Check MIME type or extension
         const isAccepted = acceptedTypes.some((type) => {

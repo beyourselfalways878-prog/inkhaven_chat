@@ -4,6 +4,7 @@ test('chat flow: send message and observe status/read + auto reply + typing', as
   // Pre-set a session to simulate a logged-in anonymous user
   await page.addInitScript(() => {
     localStorage.setItem('inkhaven:session', JSON.stringify({ userId: 'e2e_user', inkId: 'ink_e2e', displayName: 'E2E Tester', interests: ['Testing'] }));
+    localStorage.setItem('inkhaven:preferences', JSON.stringify({ safetyFilter: false }));
   });
 
   await page.goto('/chat/room_e2e_test');
@@ -32,6 +33,6 @@ test('chat flow: send message and observe status/read + auto reply + typing', as
   // Visual regression: capture the chat area (save for manual review)
   const chatArea = page.locator('div.card');
   await expect(chatArea).toBeVisible({ timeout: 5000 });
-  await chatArea.screenshot({ path: `test-results/chat-flow-${Date.now()}.png`, fullPage: false });
+  await chatArea.screenshot({ path: `test-results/chat-flow-${Date.now()}.png` });
   // (Baseline comparison can be added to CI when we have stable snapshots)
 });

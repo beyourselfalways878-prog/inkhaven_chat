@@ -85,7 +85,7 @@ function normalizeText(text: string): string {
         .replace(/@/g, 'a')
         .replace(/∪/g, 'u')
         .replace(/¢/g, 'c')
-        .replace(/[_\-\.]/g, '')
+        .replace(/[_\-.]/g, '')
         .replace(/\s+/g, ' ')
         .trim();
 }

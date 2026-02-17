@@ -176,7 +176,7 @@ All APIs are consolidated for maintainability:
 
 ## 🤝 Contributing
 
-This is a proprietary project. For inquiries, contact [support@inkhaven.in](mailto:support@inkhaven.in).
+This is a proprietary project. For inquiries, contact [namamicreations@zenithcryptoai.in](mailto:namamicreations@zenithcryptoai.in).
 
 ---
 

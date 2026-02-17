@@ -1,10 +1,11 @@
+/* eslint-disable no-unused-vars */
 "use client";
 
 import React, { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 interface AudioRecorderProps {
-    onRecordingComplete: (audioBlob: Blob, duration: number) => void;
+    onRecordingComplete: (_audioBlob: Blob, _duration: number) => void;
     maxDuration?: number;
 }
 

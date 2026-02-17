@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
+/* eslint-disable no-unused-vars */
 import { EventEmitter } from 'events';
 
 // Timing constants for message lifecycle simulation
@@ -16,6 +17,7 @@ export type Message = {
   roomId: string;
   senderId: string;
   content: string;
+  messageType?: string;
   createdAt: string;
   status?: 'sending' | 'sent' | 'delivered' | 'read';
   readAt?: string | null;
@@ -26,12 +28,13 @@ emitter.setMaxListeners(100); // Prevent memory leak warnings
 const inbox: Record<string, Message[]> = {};
 const subscriptions: Map<string, Set<Function>> = new Map();
 
-export const sendMessage = async (roomId: string, senderId: string, content: string) => {
+export const sendMessage = async (roomId: string, senderId: string, content: string, messageType: string = 'text') => {
   const msg: Message = {
     id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
     roomId,
     senderId,
     content,
+    messageType,
     createdAt: new Date().toISOString(),
     status: 'sending',
     readAt: null
@@ -90,7 +93,7 @@ export const fetchMessages = async (roomId: string) => {
   return (inbox[roomId] || []).slice();
 };
 
-export const subscribeToRoom = (roomId: string, cb: (message: Message) => void) => {
+export const subscribeToRoom = (roomId: string, cb: (_message: Message) => void) => {
   const handler = (message: Message) => cb(message);
   emitter.on(`room:${roomId}:message`, handler);
 
@@ -116,7 +119,7 @@ export const subscribeToRoom = (roomId: string, cb: (message: Message) => void) 
   };
 };
 
-export const subscribeToMessageStatus = (roomId: string, cb: (payload: { messageId: string; status: string; timestamp?: string }) => void) => {
+export const subscribeToMessageStatus = (roomId: string, cb: (_payload: { messageId: string; status: string; timestamp?: string }) => void) => {
   const handler = (payload: any) => cb(payload);
   emitter.on(`room:${roomId}:status`, handler);
 
@@ -145,8 +148,16 @@ export const sendTyping = (roomId: string, senderId: string) => {
   }, TIMING.TYPING_EXPIRE);
 };
 
-export const subscribeToTyping = (roomId: string, cb: (payload: { senderId: string; typing: boolean }) => void) => {
-  const handler = (payload: any) => cb(payload);
+export const subscribeToTyping = (roomId: string, currentUserIdOrCb: string | ((_payload: { senderId: string; typing: boolean }) => void), cb?: (_payload: { senderId: string; typing: boolean }) => void) => {
+  let callback: (payload: { senderId: string; typing: boolean }) => void;
+
+  if (typeof currentUserIdOrCb === 'function') {
+    callback = currentUserIdOrCb;
+  } else {
+    callback = cb!;
+  }
+
+  const handler = (payload: any) => callback(payload);
   emitter.on(`room:${roomId}:typing`, handler);
 
   if (!subscriptions.has(roomId)) {

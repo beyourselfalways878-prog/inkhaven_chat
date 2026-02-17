@@ -5,7 +5,7 @@
 
 import { supabaseAdmin } from '../supabaseAdmin';
 import { createLogger } from '../logger/Logger';
-import type { PresenceStatus } from '../types/database';
+
 
 const logger = createLogger('PresenceService');
 

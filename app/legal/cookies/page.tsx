@@ -157,7 +157,7 @@ export default function CookiePolicyPage() {
                     <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-6">
                         <p className="m-0">
                             For questions about our use of cookies:<br />
-                            <strong>Email:</strong> <a href="mailto:privacy@inkhaven.in" className="text-indigo-600 hover:underline">privacy@inkhaven.in</a>
+                            <strong>Email:</strong> <a href="mailto:namamicreations@zenithcryptoai.in" className="text-indigo-600 hover:underline">namamicreations@zenithcryptoai.in</a>
                         </p>
                     </div>
                 </section>

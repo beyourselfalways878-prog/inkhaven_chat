@@ -8,7 +8,7 @@ import { profileService } from '../../../../lib/services/ProfileService';
 import { handleApiError, generateRequestId } from '../../../../lib/middleware/errorHandler';
 import { updateProfileSchema } from '../../../../lib/schemas';
 import { logger } from '../../../../lib/logger/Logger';
-import { rateLimitPersistent } from '../../../../lib/rateLimitPersistent';
+import { rateLimit } from '../../../../lib/rateLimit';
 
 export async function POST(req: NextRequest) {
   const requestId = generateRequestId();
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
     // Rate limiting
     const ip = req.headers.get('x-forwarded-for') ?? 'local';
-    const limit = await rateLimitPersistent(`profile:update:${ip}`, 10, 60);
+    const limit = await rateLimit(`profile:update:${ip}`, 10, 60);
 
     if (!limit.allowed) {
       return NextResponse.json(
