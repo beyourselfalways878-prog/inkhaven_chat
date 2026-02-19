@@ -120,6 +120,61 @@ export class QuickMatchService {
             logger.error('Failed to leave queue', { userId, error });
         }
     }
+
+    /**
+     * Skip current chat and find a new match.
+     * 1. Deactivate user in current room
+     * 2. Send a system message to notify the partner
+     * 3. Re-queue for a new match
+     */
+    async skipAndRematch(userId: string, currentRoomId: string): Promise<QuickMatchResult> {
+        try {
+            logger.info('User skipping chat', { userId, currentRoomId });
+
+            // 1. Deactivate user in current room
+            const { error: deactivateError } = await supabaseAdmin
+                .from('room_participants')
+                .update({ is_active: false })
+                .eq('room_id', currentRoomId)
+                .eq('user_id', userId);
+
+            if (deactivateError) {
+                logger.error('Failed to deactivate participant', { error: deactivateError.message });
+            }
+
+            // 2. Send system message to the room so partner knows
+            await supabaseAdmin
+                .from('messages')
+                .insert({
+                    room_id: currentRoomId,
+                    sender_id: userId,
+                    content: 'User has left the chat.',
+                    message_type: 'system'
+                });
+
+            // 3. Record in match history as 'skipped' (best effort)
+            try {
+                await supabaseAdmin
+                    .from('match_history')
+                    .insert({
+                        user_id: userId,
+                        partner_id: userId, // will be updated if we can find partner
+                        room_id: currentRoomId,
+                        feedback: 'skipped'
+                    });
+            } catch {
+                // ignore errors — best effort
+            }
+
+            // 4. Remove from queue in case already queued, then find new match
+            await this.leaveQueue(userId);
+            return await this.findMatch(userId);
+        } catch (error) {
+            const errMsg = error instanceof Error ? error.message : String(error);
+            logger.error('Skip and rematch failed', { userId, currentRoomId, error: errMsg });
+            throw error instanceof AppError ? error : new MatchingError(`Skip and rematch failed: ${errMsg}`);
+        }
+    }
 }
 
 export const quickMatchService = new QuickMatchService();

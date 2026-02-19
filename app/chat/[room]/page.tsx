@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { AnimatePresence } from 'framer-motion';
-import { Search } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Search, SkipForward, Loader2 } from 'lucide-react';
 import MessageList from '../../../components/Chat/MessageList';
 import MessageInput from '../../../components/Chat/MessageInput';
 import MessageSearch from '../../../components/Chat/MessageSearch';
@@ -24,6 +24,9 @@ export default function ChatRoomPage() {
   const [ready, setReady] = useState(false);
   const [replyTo, setReplyTo] = useState<ReplyMessage | null>(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [showSkipConfirm, setShowSkipConfirm] = useState(false);
+  const [skipping, setSkipping] = useState(false);
+  const router = useRouter();
 
   const myId = session.userId || 'guest_local';
   const displayName = session.displayName || session.inkId || 'Anonymous';
@@ -84,6 +87,39 @@ export default function ChatRoomPage() {
   // Resonant Aura State
   const [myIntensity, setMyIntensity] = useState(0);
 
+  // Skip / Next Chat handler
+  const handleSkipChat = async () => {
+    setShowSkipConfirm(false);
+    setSkipping(true);
+    try {
+      // Get auth token
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+
+      const res = await fetch('/api/quick-match', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ action: 'skip', currentRoomId: currentRoom })
+      });
+
+      const data = await res.json();
+
+      if (data.ok && data.data?.matchFound && data.data?.roomId) {
+        // Matched! Navigate to new room
+        router.push(`/chat/${data.data.roomId}`);
+      } else {
+        // Waiting for match, redirect to quick-match page
+        router.push('/quick-match');
+      }
+    } catch (err) {
+      console.error('Skip chat failed:', err);
+      setSkipping(false);
+    }
+  };
+
   if (!ready) {
     return (
       <div className="container mx-auto px-6 py-10">
@@ -131,6 +167,15 @@ export default function ChatRoomPage() {
               isConnected={isConnected}
             />
             <button
+              onClick={() => setShowSkipConfirm(true)}
+              disabled={skipping}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Skip to next chat"
+            >
+              <SkipForward size={14} />
+              <span>Next</span>
+            </button>
+            <button
               onClick={() => setShowSearch((s) => !s)}
               className="h-8 w-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition"
               title="Search messages"
@@ -167,6 +212,63 @@ export default function ChatRoomPage() {
             onIntensityChange={setMyIntensity}
           />
         </AuraBlendBackground>
+
+        {/* Skip confirmation dialog */}
+        <AnimatePresence>
+          {showSkipConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowSkipConfirm(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-lg font-semibold text-white mb-2">End this chat?</h3>
+                <p className="text-sm text-white/50 mb-6">
+                  This will end your current conversation and match you with a new person.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowSkipConfirm(false)}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 text-sm font-medium transition"
+                  >
+                    Stay
+                  </button>
+                  <button
+                    onClick={handleSkipChat}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 text-sm font-medium transition flex items-center justify-center gap-2"
+                  >
+                    <SkipForward size={16} />
+                    Next Chat
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Searching overlay */}
+        <AnimatePresence>
+          {skipping && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm"
+            >
+              <Loader2 className="w-12 h-12 text-indigo-400 animate-spin mb-4" />
+              <p className="text-lg font-medium text-white animate-pulse">Finding your next match...</p>
+              <p className="text-sm text-white/40 mt-1">Hang tight</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

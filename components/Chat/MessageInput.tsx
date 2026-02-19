@@ -69,13 +69,13 @@ export default function MessageInput({ roomId, myId, replyTo, onCancelReply, onI
     if (safetyEnabled) {
       setChecking(true);
       try {
-        const res = await fetch('/api/moderation/check', {
+        const res = await fetch('/api/moderation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: value.trim() })
+          body: JSON.stringify({ action: 'check', text: value.trim() })
         });
         const json = await res.json();
-        if (json?.allowed === false) {
+        if (json?.data?.flagged === true) {
           setBlockedMessage('Message blocked by safety filter. Try rephrasing.');
           setChecking(false);
           return;

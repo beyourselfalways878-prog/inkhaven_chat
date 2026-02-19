@@ -240,3 +240,62 @@ DROP POLICY IF EXISTS "Participants can view rooms" ON public.rooms;
 CREATE POLICY "Participants can view rooms" ON public.rooms FOR SELECT USING (
   public.is_room_participant(id, auth.uid()) OR (auth.jwt() ->> 'role') = 'service_role'
 );
+
+-- =============================================================================
+-- Connection Queue (Live Matching)
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS public.connection_queue (
+  user_id UUID PRIMARY KEY REFERENCES public.profiles(id) ON DELETE CASCADE,
+  mode TEXT DEFAULT 'casual' CHECK (mode IN ('casual', 'deep')),
+  interests TEXT[] DEFAULT '{}',
+  comfort_level TEXT,
+  mood TEXT,
+  vibe_score DECIMAL,
+  skip_count INTEGER DEFAULT 0,
+  waiting_since TIMESTAMPTZ DEFAULT NOW(),
+  matched_with UUID REFERENCES public.profiles(id),
+  current_room_id UUID REFERENCES public.rooms(id),
+  last_match_at TIMESTAMPTZ
+);
+
+-- RLS for Queue
+ALTER TABLE public.connection_queue ENABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON TABLE public.connection_queue TO anon, authenticated, service_role;
+
+DROP POLICY IF EXISTS "Users can manage own queue entry" ON public.connection_queue;
+CREATE POLICY "Users can manage own queue entry" ON public.connection_queue 
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Service role manages queue" ON public.connection_queue;
+CREATE POLICY "Service role manages queue" ON public.connection_queue 
+  FOR ALL USING ((auth.jwt() ->> 'role') = 'service_role');
+
+-- =============================================================================
+-- REALTIME SUBSCRIPTIONS
+-- =============================================================================
+
+-- Add tables to the publication to enable Realtime (WebSocket) events
+-- using DO block to avoid errors if already added
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'messages') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'room_participants') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.room_participants;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'message_reactions') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.message_reactions;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'message_statuses') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.message_statuses;
+  END IF;
+
+   IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'connection_queue') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.connection_queue;
+  END IF;
+END $$;

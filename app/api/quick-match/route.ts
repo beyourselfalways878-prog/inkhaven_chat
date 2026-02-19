@@ -22,6 +22,18 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ ok: true });
         }
 
+        if (body.action === 'skip') {
+            const currentRoomId = body.currentRoomId;
+            if (!currentRoomId) {
+                return NextResponse.json(
+                    { ok: false, message: 'currentRoomId is required for skip action' },
+                    { status: 400 }
+                );
+            }
+            const result = await quickMatchService.skipAndRematch(user.id, currentRoomId);
+            return NextResponse.json({ ok: true, data: result });
+        }
+
         const result = await quickMatchService.findMatch(user.id);
 
         return NextResponse.json({
