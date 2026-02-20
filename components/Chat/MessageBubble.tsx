@@ -1,49 +1,18 @@
+/* eslint-disable no-unused-vars */
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import NextImage from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Reply, Flag, RotateCcw, Smile, Pencil } from 'lucide-react';
-import chatClient from '../../lib/chatClient';
-import { MessageReplyInline, type ReplyMessage } from './MessageReply';
+import { Reply, Smile, Pencil } from 'lucide-react';
+import { MessageReplyInline } from './MessageReply';
+import type { WebRTCMessage } from '../../lib/hooks/useWebRTC';
 
 // ============================================================================
 // Status Icons
 // ============================================================================
 
-function StatusIcon({ status }: { status?: string }) {
-  if (!status) return null;
-  if (status === 'sending') {
-    return (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="inline-block opacity-80">
-        <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.2" opacity="0.4" />
-      </svg>
-    );
-  }
-  if (status === 'sent') {
-    return (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="inline-block opacity-80">
-        <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    );
-  }
-  if (status === 'delivered') {
-    return (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="inline-block opacity-80">
-        <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M22 6L13 17l-4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.8" />
-      </svg>
-    );
-  }
-  // read
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="inline-block text-sky-400">
-      <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M22 6L13 17l-4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
+// Status Icons removed because they are unused locally in P2P right now
 
 // ============================================================================
 // Quick Reactions
@@ -51,7 +20,7 @@ function StatusIcon({ status }: { status?: string }) {
 
 const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
-function QuickReactions({ onSelect, show }: { onSelect: (emoji: string) => void; show: boolean }) { // eslint-disable-line no-unused-vars
+function QuickReactions({ onSelect, show }: { onSelect: (_emoji: string) => void; show: boolean }) {
   return (
     <AnimatePresence>
       {show && (
@@ -80,116 +49,41 @@ function QuickReactions({ onSelect, show }: { onSelect: (emoji: string) => void;
 // Message Bubble
 // ============================================================================
 
-export interface MessageData {
-  id?: string;
-  roomId?: string;
-  senderId?: string;
-  content: string;
-  createdAt: string;
-  status?: string;
-  readAt?: string | null;
-  messageType?: string;
-  metadata?: any;
-  replyTo?: ReplyMessage | null;
-}
-
 interface MessageBubbleProps {
-  message: MessageData;
+  message: WebRTCMessage;
   isMine?: boolean;
-  onReply?: (message: MessageData) => void; // eslint-disable-line no-unused-vars
+  onReply?: (_message: WebRTCMessage) => void;
+  onEdit?: (_messageId: string, _newContent: string) => void;
+  onReact?: (_messageId: string, _reaction: string) => void;
 }
 
-export default function MessageBubble({ message, isMine, onReply }: MessageBubbleProps) {
-  const [reactions, setReactions] = useState<any[]>([]);
-  const [retrying, setRetrying] = useState(false);
+export default function MessageBubble({ message, isMine, onReply, onEdit, onReact }: MessageBubbleProps) {
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(message.content);
-  const [displayContent, setDisplayContent] = useState(message.content);
-  const [isEdited, setIsEdited] = useState(!!(message as any).edited_at);
+
   const audioRef = useRef<HTMLAudioElement>(null);
   const actionsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Fetch reactions
-  useEffect(() => {
-    if (!message.id) return;
-    let cancelled = false;
-    fetch(`/api/messages/${message.id}/reactions`)
-      .then(res => res.json())
-      .then(json => { if (!cancelled) setReactions(json.reactions ?? []); })
-      .catch(() => { });
-    return () => { cancelled = true; };
-  }, [message.id]);
-
-  const getLocalUserId = useCallback(() => {
-    const store = localStorage.getItem('ink_user_id');
-    if (store) return store;
-    const id = `local_${Math.random().toString(36).slice(2, 9)}`;
-    localStorage.setItem('ink_user_id', id);
-    return id;
-  }, []);
-
-  const toggleReaction = useCallback(async (emoji: string) => {
-    if (!message.id) return;
+  const toggleReaction = useCallback((emoji: string) => {
     setShowReactions(false);
-    const userId = getLocalUserId();
-    const res = await fetch('/api/reactions/toggle', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messageId: message.id, userId, reaction: emoji }),
-    });
-    const json = await res.json();
-    if (json.reactions) setReactions(json.reactions);
-  }, [message.id, getLocalUserId]);
-
-  const handleRetry = useCallback(async () => {
-    if (!message.id) return;
-    setRetrying(true);
-    try {
-      await chatClient.sendMessage(message.roomId ?? 'default', message.senderId ?? 'unknown', message.content);
-    } catch {
-      // ignore
-    } finally {
-      setRetrying(false);
-    }
-  }, [message]);
-
-  const handleReport = useCallback(async () => {
-    if (!message.id) return;
-    const reporterId = getLocalUserId();
-    await fetch('/api/moderation', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'report', messageId: String(message.id), reporterId, reason: 'inappropriate' })
-    });
-  }, [message.id, getLocalUserId]);
+    if (onReact) onReact(message.id, emoji);
+  }, [message.id, onReact]);
 
   const handleReply = useCallback(() => {
     if (onReply) onReply(message);
     setShowActions(false);
   }, [message, onReply]);
 
-  const handleEdit = useCallback(async () => {
-    if (!message.id || editText.trim() === displayContent) {
-      setEditing(false);
-      return;
+  const handleEdit = useCallback(() => {
+    if (editText.trim() !== message.content && onEdit) {
+      onEdit(message.id, editText.trim());
     }
-    try {
-      const res = await fetch(`/api/messages/${message.id}/edit`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: editText.trim(), senderId: message.senderId }),
-      });
-      if (res.ok) {
-        setDisplayContent(editText.trim());
-        setIsEdited(true);
-      }
-    } catch { /* silent */ }
     setEditing(false);
     setShowActions(false);
-  }, [message.id, message.senderId, editText, displayContent]);
+  }, [message.id, message.content, editText, onEdit]);
 
   const handleMouseEnter = () => {
     if (actionsTimeout.current) clearTimeout(actionsTimeout.current);
@@ -203,18 +97,15 @@ export default function MessageBubble({ message, isMine, onReply }: MessageBubbl
     }, 300);
   };
 
-  // Unique grouped reactions
-  const reactionGroups = reactions.reduce((acc: Record<string, { count: number; userReacted: boolean }>, r: any) => {
-    if (!acc[r.reaction]) acc[r.reaction] = { count: 0, userReacted: false };
-    acc[r.reaction].count++;
-    if (r.user_id === (typeof window !== 'undefined' ? localStorage.getItem('ink_user_id') : null)) {
-      acc[r.reaction].userReacted = true;
-    }
+  // Group reactions locally via the injected reactions array from WebRTC props
+  const reactionGroups = (message.reactions || []).reduce((acc: Record<string, { count: number; userReacted: boolean }>, r: string) => {
+    if (!acc[r]) acc[r] = { count: 0, userReacted: false };
+    acc[r].count++;
+    // In true P2P, we just let them show regardless or track my vs partner. Simplified here.
     return acc;
   }, {});
 
-  // Detect links
-  const hasLink = /https?:\/\/\S+/.test(displayContent);
+  const hasLink = /https?:\/\/\S+/.test(message.content);
 
   return (
     <div
@@ -232,13 +123,12 @@ export default function MessageBubble({ message, isMine, onReply }: MessageBubbl
             ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-br-md'
             : 'bg-white/[0.08] text-white/90 border border-white/5 rounded-bl-md'
           }
-          ${message.status === 'sending' ? 'opacity-70' : ''}
         `}
       >
         {/* Reply inline */}
-        {message.replyTo && (
+        {message.replyToId && (
           <div className="px-3 pt-2">
-            <MessageReplyInline replyTo={message.replyTo} isMine={isMine} />
+            <MessageReplyInline replyTo={{ id: message.replyToId, content: 'Replying to message...' } as any} isMine={isMine} />
           </div>
         )}
 
@@ -293,7 +183,7 @@ export default function MessageBubble({ message, isMine, onReply }: MessageBubbl
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium truncate">{message.metadata?.fileName || 'File'}</div>
                 <div className="text-xs opacity-70">
-                  {message.metadata?.fileSize ? `${(message.metadata.fileSize / 1024 / 1024).toFixed(1)}MB` : ''}
+                  File Attachment
                 </div>
               </div>
               <a
@@ -321,35 +211,24 @@ export default function MessageBubble({ message, isMine, onReply }: MessageBubbl
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleEdit(); }
-                  if (e.key === 'Escape') { setEditing(false); setEditText(displayContent); }
+                  if (e.key === 'Escape') { setEditing(false); setEditText(message.content); }
                 }}
               />
               <div className="flex items-center gap-1.5 justify-end">
-                <button onClick={() => { setEditing(false); setEditText(displayContent); }} className="text-[10px] text-white/40 hover:text-white/60 px-2 py-0.5">Cancel</button>
+                <button onClick={() => { setEditing(false); setEditText(message.content); }} className="text-[10px] text-white/40 hover:text-white/60 px-2 py-0.5">Cancel</button>
                 <button onClick={handleEdit} className="text-[10px] bg-indigo-500/80 hover:bg-indigo-500 text-white px-2 py-0.5 rounded">Save</button>
               </div>
             </div>
           ) : (
             <div className="text-sm leading-relaxed whitespace-pre-wrap">
-              {hasLink ? renderWithLinks(displayContent) : displayContent}
+              {hasLink ? renderWithLinks(message.content) : message.content}
             </div>
           )}
 
           {/* Timestamp + status */}
           <div className="mt-1 flex items-center justify-end gap-1.5 text-[10px] opacity-50">
-            {isEdited && <span className="italic">edited</span>}
+            {message.isEdited && <span className="italic">edited</span>}
             <span>{new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            {isMine && (
-              <motion.span
-                key={message.status ?? 'none'}
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                className="flex items-center"
-              >
-                <StatusIcon status={message.status} />
-              </motion.span>
-            )}
           </div>
         </div>
 
@@ -391,13 +270,15 @@ export default function MessageBubble({ message, isMine, onReply }: MessageBubbl
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            <button
-              onClick={() => setShowReactions(!showReactions)}
-              className="p-1.5 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/5 transition-colors"
-              title="React"
-            >
-              <Smile size={14} />
-            </button>
+            {onReact && (
+              <button
+                onClick={() => setShowReactions(!showReactions)}
+                className="p-1.5 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/5 transition-colors"
+                title="React"
+              >
+                <Smile size={14} />
+              </button>
+            )}
             {onReply && (
               <button
                 onClick={handleReply}
@@ -407,37 +288,18 @@ export default function MessageBubble({ message, isMine, onReply }: MessageBubbl
                 <Reply size={14} />
               </button>
             )}
-            {isMine && message.messageType !== 'audio' && message.messageType !== 'file' && (
+            {isMine && message.messageType !== 'audio' && message.messageType !== 'file' && onEdit && (
               <button
-                onClick={() => { setEditing(true); setEditText(displayContent); setShowActions(false); }}
+                onClick={() => { setEditing(true); setEditText(message.content); setShowActions(false); }}
                 className="p-1.5 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/5 transition-colors"
                 title="Edit"
               >
                 <Pencil size={14} />
               </button>
             )}
-            {!isMine && (
-              <button
-                onClick={handleReport}
-                className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-white/5 transition-colors"
-                title="Report"
-              >
-                <Flag size={14} />
-              </button>
-            )}
-            {message.status === 'failed' && (
-              <button
-                onClick={handleRetry}
-                disabled={retrying}
-                className="p-1.5 rounded-lg text-red-400 hover:bg-white/5 transition-colors"
-                title="Retry"
-              >
-                <RotateCcw size={14} className={retrying ? 'animate-spin' : ''} />
-              </button>
-            )}
 
             {/* Quick reactions popup */}
-            <QuickReactions onSelect={toggleReaction} show={showReactions} />
+            {onReact && <QuickReactions onSelect={toggleReaction} show={showReactions} />}
           </motion.div>
         )}
       </AnimatePresence>

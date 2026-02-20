@@ -1,24 +1,25 @@
+/* eslint-disable no-unused-vars */
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Mic, Paperclip } from 'lucide-react';
-import chatClient from '../../lib/chatClient';
 import { AudioRecorder } from './AudioRecorder';
 import { FileUpload } from './FileUpload';
 import { EmojiToggle } from './EmojiPicker';
 import { MessageReplyPreview, type ReplyMessage } from './MessageReply';
+import type { WebRTCMessage } from '../../lib/hooks/useWebRTC';
 
 interface MessageInputProps {
-  roomId: string;
   myId: string;
   replyTo?: ReplyMessage | null;
   onCancelReply?: () => void;
-  onIntensityChange?: (_intensity: number) => void; // eslint-disable-line no-unused-vars
+  onIntensityChange?: (__intensity: number) => void;
+  onSendMessage: (_content: string, _type?: WebRTCMessage['messageType'], _replyToId?: string, _metadata?: any) => void;
+  onTyping: (_isTyping: boolean) => void;
 }
 
-export default function MessageInput({ roomId, myId, replyTo, onCancelReply, onIntensityChange }: MessageInputProps) {
+export default function MessageInput({ myId, replyTo, onCancelReply, onIntensityChange, onSendMessage, onTyping }: MessageInputProps) {
   const [value, setValue] = useState('');
   const [blockedMessage, setBlockedMessage] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
@@ -26,41 +27,8 @@ export default function MessageInput({ roomId, myId, replyTo, onCancelReply, onI
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const queryClient = useQueryClient();
   const typingTimer = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const mutation = useMutation({
-    mutationFn: (content: string) => chatClient.sendMessage(roomId, myId, content),
-    onMutate: async (content: string) => {
-      const tempId = `temp_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`;
-      const tempMsg = {
-        id: tempId, roomId, senderId: myId, content,
-        createdAt: new Date().toISOString(), status: 'sending', readAt: null,
-        replyTo: replyTo || null,
-      };
-
-      await queryClient.cancelQueries({ queryKey: ['messages', roomId] });
-      const previous = queryClient.getQueryData<any[]>(['messages', roomId]);
-      queryClient.setQueryData(['messages', roomId], (old: any[] | undefined) => ([...(old || []), tempMsg]));
-
-      return { previous, tempId };
-    },
-    onError: (_err, _content, context: any) => {
-      if (context?.tempId) {
-        queryClient.setQueryData(['messages', roomId], (old: any[] | undefined) =>
-          (old || []).map((m: any) => (m.id === context.tempId ? { ...m, status: 'failed' } : m))
-        );
-      } else if (context?.previous) {
-        queryClient.setQueryData(['messages', roomId], context.previous);
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['messages', roomId] });
-      setValue('');
-      onCancelReply?.();
-    }
-  });
 
   const onSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -86,7 +54,10 @@ export default function MessageInput({ roomId, myId, replyTo, onCancelReply, onI
         setChecking(false);
       }
     }
-    mutation.mutate(value.trim());
+
+    onSendMessage(value.trim(), 'text', replyTo?.id);
+    setValue('');
+    onCancelReply?.();
   };
 
   const handleAudioRecordingComplete = async (audioBlob: Blob, duration: number) => {
@@ -105,15 +76,9 @@ export default function MessageInput({ roomId, myId, replyTo, onCancelReply, onI
         body: audioBlob
       });
       if (!uploadRes.ok) throw new Error('Upload failed');
-      const tempId = `temp_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`;
-      const tempMsg = {
-        id: tempId, roomId, senderId: myId, content: audioUrl, messageType: 'audio',
-        createdAt: new Date().toISOString(), status: 'sending', readAt: null
-      };
-      await queryClient.cancelQueries({ queryKey: ['messages', roomId] });
-      queryClient.setQueryData(['messages', roomId], (old: any[] | undefined) => ([...(old || []), tempMsg]));
-      await chatClient.sendMessage(roomId, myId, audioUrl, 'audio'); // Pass messageType
-      queryClient.invalidateQueries({ queryKey: ['messages', roomId] });
+
+      onSendMessage(audioUrl, 'audio', replyTo?.id);
+      onCancelReply?.();
     } catch (err) {
       console.error('Audio upload failed:', err);
       setBlockedMessage('Failed to upload audio. Please try again.');
@@ -136,16 +101,9 @@ export default function MessageInput({ roomId, myId, replyTo, onCancelReply, onI
         body: file
       });
       if (!uploadRes.ok) throw new Error('Upload failed');
-      const tempId = `temp_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`;
-      const tempMsg = {
-        id: tempId, roomId, senderId: myId, content: fileUrl, messageType: 'file',
-        metadata: { fileName: file.name, fileSize: file.size, fileMimeType: file.type, fileUrl },
-        createdAt: new Date().toISOString(), status: 'sending', readAt: null
-      };
-      await queryClient.cancelQueries({ queryKey: ['messages', roomId] });
-      queryClient.setQueryData(['messages', roomId], (old: any[] | undefined) => ([...(old || []), tempMsg]));
-      await chatClient.sendMessage(roomId, myId, fileUrl, 'file'); // Pass messageType
-      queryClient.invalidateQueries({ queryKey: ['messages', roomId] });
+
+      onSendMessage(fileUrl, 'file', replyTo?.id, { fileName: file.name, fileSize: file.size, fileMimeType: file.type, fileUrl });
+      onCancelReply?.();
     } catch (err) {
       console.error('File upload failed:', err);
       setBlockedMessage('Failed to upload file. Please try again.');
@@ -179,32 +137,27 @@ export default function MessageInput({ roomId, myId, replyTo, onCancelReply, onI
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);
-    try { chatClient.sendTyping(roomId, myId); } catch { /* ignore */ }
+
+    try { onTyping(true); } catch { /* ignore */ }
+
     if (typingTimer.current) window.clearTimeout(typingTimer.current);
-    typingTimer.current = window.setTimeout(() => { }, 1200);
+    typingTimer.current = window.setTimeout(() => {
+      try { onTyping(false); } catch { /* ignore */ }
+    }, 1200);
   };
 
   // Typing velocity tracker
   const [intensity, setIntensity] = useState(0);
   const keystrokes = useRef<number[]>([]);
 
-  // Calculate intensity on every keystroke
   const trackTypingVelocity = () => {
     const now = Date.now();
-    // Keep keystrokes from last 2 seconds
     keystrokes.current = [...keystrokes.current, now].filter(t => now - t < 2000);
-
-    // Calculate CPM (Chars Per Minute) roughly
-    // 2 seconds window * 30 = 60 seconds
     const cpm = keystrokes.current.length * 30;
-
-    // Normalize: 0 to 300 CPM (approx 60 WPM) -> 0.0 to 1.0
     const rawIntensity = Math.min(cpm / 300, 1);
 
-    // Smooth decay/attack
     setIntensity(prev => {
       const target = rawIntensity;
-      // Attack fast, decay slow (handled by parent or CSS, but smoothing here helps)
       return target > prev ? target : prev * 0.95;
     });
 
@@ -228,11 +181,9 @@ export default function MessageInput({ roomId, myId, replyTo, onCancelReply, onI
     const timer = setInterval(() => {
       const now = Date.now();
       if (keystrokes.current.length > 0) {
-        // Remove old keystrokes
         const valid = keystrokes.current.filter(t => now - t < 2000);
         if (valid.length !== keystrokes.current.length) {
           keystrokes.current = valid;
-          // Recalculate
           const cpm = valid.length * 30;
           const newIntensity = Math.min(cpm / 300, 1);
           setIntensity(newIntensity);
@@ -249,18 +200,16 @@ export default function MessageInput({ roomId, myId, replyTo, onCancelReply, onI
     return () => clearInterval(timer);
   }, [intensity, onIntensityChange]);
 
-  const isBusy = mutation.isPending || checking;
+  const isBusy = checking;
 
   return (
     <div className="border-t border-white/5 bg-slate-900/80 backdrop-blur-sm">
-      {/* Reply preview */}
       <AnimatePresence>
         {replyTo && onCancelReply && (
-          <MessageReplyPreview replyTo={replyTo} onCancel={onCancelReply} />
+          <MessageReplyPreview replyTo={replyTo as any} onCancel={onCancelReply} />
         )}
       </AnimatePresence>
 
-      {/* Audio / File panels */}
       <AnimatePresence>
         {showAudioRecorder && (
           <motion.div
@@ -288,10 +237,8 @@ export default function MessageInput({ roomId, myId, replyTo, onCancelReply, onI
         )}
       </AnimatePresence>
 
-      {/* Main input */}
       <form onSubmit={onSubmit} className="px-3 py-2">
         <div className="flex items-end gap-1.5">
-          {/* Left tools */}
           <div className="flex items-center gap-0.5 pb-0.5">
             <button
               type="button"
@@ -312,7 +259,6 @@ export default function MessageInput({ roomId, myId, replyTo, onCancelReply, onI
             <EmojiToggle onSelect={handleEmojiSelect} />
           </div>
 
-          {/* Input */}
           <input
             ref={inputRef}
             value={value}
@@ -322,7 +268,6 @@ export default function MessageInput({ roomId, myId, replyTo, onCancelReply, onI
             placeholder={replyTo ? 'Type your reply...' : 'Type a message...'}
           />
 
-          {/* Send */}
           <button
             type="submit"
             disabled={isBusy || !value.trim()}
@@ -338,7 +283,6 @@ export default function MessageInput({ roomId, myId, replyTo, onCancelReply, onI
           </button>
         </div>
 
-        {/* Blocked message */}
         <AnimatePresence>
           {blockedMessage && (
             <motion.div
@@ -352,7 +296,6 @@ export default function MessageInput({ roomId, myId, replyTo, onCancelReply, onI
           )}
         </AnimatePresence>
 
-        {/* Upload progress */}
         {uploadProgress > 0 && uploadProgress < 100 && (
           <div className="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
             <motion.div

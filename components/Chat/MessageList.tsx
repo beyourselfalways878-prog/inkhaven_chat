@@ -1,95 +1,39 @@
+/* eslint-disable no-unused-vars */
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
 import { ChevronDown } from 'lucide-react';
-import chatClient from '../../lib/chatClient';
-import { subscribeToMessageStatus as noopSubStatus, Message } from '../../lib/mockChat';
-import MessageBubble, { type MessageData } from './MessageBubble';
+import MessageBubble from './MessageBubble';
 import TypingIndicator from './TypingIndicator';
 import DateSeparator from './DateSeparator';
+import type { WebRTCMessage } from '../../lib/hooks/useWebRTC';
 
-interface MessageListProps {
+export interface MessageListProps {
   roomId: string;
   myId: string;
-  onReply?: (message: MessageData) => void; // eslint-disable-line no-unused-vars
+  messages: WebRTCMessage[];
+  partnerTyping: boolean;
+  onReply?: (_message: WebRTCMessage) => void;
+  onEdit?: (_messageId: string, _newContent: string) => void;
+  onReact?: (_messageId: string, _reaction: string) => void;
 }
 
-export default function MessageList({ roomId, myId, onReply }: MessageListProps) {
-  const { data } = useQuery({
-    queryKey: ['messages', roomId],
-    queryFn: () => chatClient.fetchMessages(roomId),
-    refetchOnWindowFocus: false
-  });
-  const [messages, setMessages] = useState<Message[]>(data || []);
-  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+export default function MessageList({ myId, messages, partnerTyping, onReply, onEdit, onReact }: MessageListProps) {
   const [showScrollFab, setShowScrollFab] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const endRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const isAtBottomRef = useRef(true);
 
-  useEffect(() => {
-    if (data) setMessages(data);
-  }, [data]);
-
-  useEffect(() => {
-    const unsub = chatClient.subscribeToRoom(roomId, (m) => {
-      setMessages((prev) => [...prev, m]);
-      // If not at bottom, increment unread
-      if (!isAtBottomRef.current) {
-        setUnreadCount(c => c + 1);
-      }
-    });
-
-    const unsubStatusLocal = noopSubStatus(roomId, (payload) => {
-      setMessages((prev) => prev.map((msg) => (String(msg.id) === String(payload.messageId) ? { ...msg, status: payload.status as any, readAt: payload.timestamp ?? msg.readAt } : msg)));
-    });
-
-    const unsubStatusRemote = chatClient.subscribeToMessageStatus ? chatClient.subscribeToMessageStatus(roomId, (payload: any) => {
-      setMessages((prev) => prev.map((msg) => (String(msg.id) === String(payload.messageId) ? { ...msg, status: payload.status as any, readAt: payload.timestamp ?? msg.readAt } : msg)));
-    }) : () => { };
-
-    const unsubTyping = chatClient.subscribeToTyping(roomId, myId, ({ senderId, typing }: { senderId: string; typing: boolean }) => {
-      setTypingUsers((prev) => {
-        if (typing) {
-          if (!prev.includes(senderId)) return [...prev, senderId];
-          return prev;
-        }
-        return prev.filter((id) => id !== senderId);
-      });
-    });
-
-    return () => {
-      unsub();
-      unsubStatusLocal();
-      unsubStatusRemote();
-      unsubTyping();
-    };
-  }, [roomId, myId]);
-
-  // Group messages by date
-  const grouped: Array<{ type: 'date' | 'message'; date?: string; message?: Message }> = [];
-  for (let i = 0; i < messages.length; i++) {
-    const msg = messages[i];
-    const prev = messages[i - 1];
-    const msgDate = new Date(msg.createdAt);
-    const msgDay = msgDate.toDateString();
-    const prevDay = prev ? new Date(prev.createdAt).toDateString() : null;
-
-    if (!prev || msgDay !== prevDay) {
-      grouped.push({ type: 'date', date: msgDay });
-    }
-    grouped.push({ type: 'message', message: msg });
-  }
-
   // Auto-scroll when at bottom
   useEffect(() => {
     if (isAtBottomRef.current) {
       endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    } else {
+      setUnreadCount(c => c + 1);
     }
-  }, [messages, typingUsers]);
+  }, [messages, partnerTyping]);
 
   // Track scroll position
   const handleScroll = useCallback(() => {
@@ -106,6 +50,21 @@ export default function MessageList({ roomId, myId, onReply }: MessageListProps)
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
     setUnreadCount(0);
   };
+
+  // Group messages by date
+  const grouped: Array<{ type: 'date' | 'message'; date?: string; message?: WebRTCMessage }> = [];
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i];
+    const prev = messages[i - 1];
+    const msgDate = new Date(msg.createdAt);
+    const msgDay = msgDate.toDateString();
+    const prevDay = prev ? new Date(prev.createdAt).toDateString() : null;
+
+    if (!prev || msgDay !== prevDay) {
+      grouped.push({ type: 'date', date: msgDay });
+    }
+    grouped.push({ type: 'message', message: msg });
+  }
 
   return (
     <div
@@ -131,13 +90,15 @@ export default function MessageList({ roomId, myId, onReply }: MessageListProps)
                 message={m}
                 isMine={m.senderId === myId}
                 onReply={onReply}
+                onEdit={onEdit}
+                onReact={onReact}
               />
             </motion.div>
           );
         })}
       </motion.div>
 
-      {typingUsers.length > 0 && <TypingIndicator name={typingUsers[0] === myId ? undefined : typingUsers[0]} />}
+      {partnerTyping && <TypingIndicator />}
 
       <div ref={endRef} />
 
