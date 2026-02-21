@@ -8,7 +8,7 @@ export interface WebRTCMessage {
     content: string;
     createdAt: string;
     replyToId?: string;
-    messageType: 'text' | 'image' | 'audio' | 'system' | 'file';
+    messageType: 'text' | 'image' | 'audio' | 'system' | 'file' | 'glowpad';
     metadata?: any;
     reactions?: string[];
     isEdited?: boolean;

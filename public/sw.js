@@ -1,9 +1,10 @@
+/* eslint-env serviceworker */
 // Clean, Minimal Service Worker for WebRTC Architecture
 // This replaces the old database-heavy service worker and clears its queues.
 
 const CACHE_NAME = 'inkhaven-chat-v3.0.0'
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 

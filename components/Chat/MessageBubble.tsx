@@ -160,6 +160,17 @@ export default function MessageBubble({ message, isMine, onReply, onEdit, onReac
               <audio ref={audioRef} src={message.content} onEnded={() => setAudioPlaying(false)} className="hidden" />
               <span className="text-sm">🎤 Audio message</span>
             </div>
+          ) : message.messageType === 'glowpad' ? (
+            <div className="relative mt-2 mb-2 p-2 bg-obsidian-950 rounded-xl border border-white/5 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+              <NextImage
+                src={message.content}
+                alt="Ephemeral Neon Stroke"
+                width={200}
+                height={200}
+                className="object-contain drop-shadow-[0_0_15px_rgba(99,102,241,0.8)]"
+              />
+            </div>
           ) : (message.messageType === 'file' && message.metadata?.fileMimeType?.startsWith('image/')) ? (
             <div className="relative mt-1 mb-1 max-w-sm rounded-lg overflow-hidden border border-white/10">
               <a href={message.metadata?.fileUrl || message.content} target="_blank" rel="noopener noreferrer">

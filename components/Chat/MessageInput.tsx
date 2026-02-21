@@ -3,10 +3,11 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Mic, Paperclip } from 'lucide-react';
+import { Send, Mic, Paperclip, PenTool } from 'lucide-react';
 import { AudioRecorder } from './AudioRecorder';
 import { FileUpload } from './FileUpload';
 import { EmojiToggle } from './EmojiPicker';
+import Glowpad from './Glowpad';
 import { MessageReplyPreview, type ReplyMessage } from './MessageReply';
 import type { WebRTCMessage } from '../../lib/hooks/useWebRTC';
 
@@ -26,6 +27,7 @@ export default function MessageInput({ myId, replyTo, onCancelReply, onIntensity
   const [safetyEnabled, setSafetyEnabled] = useState(true);
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [showGlowpad, setShowGlowpad] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const typingTimer = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -108,6 +110,11 @@ export default function MessageInput({ myId, replyTo, onCancelReply, onIntensity
       console.error('File upload failed:', err);
       setBlockedMessage('Failed to upload file. Please try again.');
     }
+  };
+
+  const handleGlowpadSend = (base64Image: string) => {
+    setShowGlowpad(false);
+    onSendMessage(base64Image, 'glowpad', replyTo?.id);
   };
 
   const handleEmojiSelect = (emoji: string) => {
@@ -235,6 +242,19 @@ export default function MessageInput({ myId, replyTo, onCancelReply, onIntensity
             </div>
           </motion.div>
         )}
+        {showGlowpad && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 pt-3 pb-2"
+          >
+            <Glowpad
+              onSend={handleGlowpadSend}
+              onCancel={() => setShowGlowpad(false)}
+            />
+          </motion.div>
+        )}
       </AnimatePresence>
 
       <form onSubmit={onSubmit} className="px-3 py-2">
@@ -242,7 +262,15 @@ export default function MessageInput({ myId, replyTo, onCancelReply, onIntensity
           <div className="flex items-center gap-0.5 pb-0.5">
             <button
               type="button"
-              onClick={() => { setShowAudioRecorder(!showAudioRecorder); setShowFileUpload(false); }}
+              onClick={() => { setShowGlowpad(!showGlowpad); setShowAudioRecorder(false); setShowFileUpload(false); }}
+              className={`p-2 rounded-xl transition-colors ${showGlowpad ? 'bg-indigo-500/20 text-indigo-400' : 'text-white/40 hover:text-white/60 hover:bg-white/5'}`}
+              title="Draw Ephemeral Neon"
+            >
+              <PenTool size={20} />
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowAudioRecorder(!showAudioRecorder); setShowFileUpload(false); setShowGlowpad(false); }}
               className={`p-2 rounded-xl transition-colors ${showAudioRecorder ? 'bg-red-500/20 text-red-400' : 'text-white/40 hover:text-white/60 hover:bg-white/5'}`}
               title="Record audio"
             >
@@ -250,7 +278,7 @@ export default function MessageInput({ myId, replyTo, onCancelReply, onIntensity
             </button>
             <button
               type="button"
-              onClick={() => { setShowFileUpload(!showFileUpload); setShowAudioRecorder(false); }}
+              onClick={() => { setShowFileUpload(!showFileUpload); setShowAudioRecorder(false); setShowGlowpad(false); }}
               className={`p-2 rounded-xl transition-colors ${showFileUpload ? 'bg-indigo-500/20 text-indigo-400' : 'text-white/40 hover:text-white/60 hover:bg-white/5'}`}
               title="Upload file"
             >

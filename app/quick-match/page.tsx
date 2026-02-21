@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useSessionStore } from '../../stores/useSessionStore';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/button';
-import { InkAura, ChemistryMeter } from '../../components/InkAura';
+import AuraSphere from '../../components/Profile/AuraSphere';
 import { useToast } from '../../components/ui/toast';
-import { Loader2, Zap, Users, ShieldCheck, Sparkles } from 'lucide-react';
+import { Loader2, Users, ShieldCheck, Sparkles, Activity } from 'lucide-react';
 
 export default function QuickMatchPage() {
   const router = useRouter();
@@ -16,18 +16,19 @@ export default function QuickMatchPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const toast = useToast();
 
-  const auraSeed = session.auraSeed ?? 42;
-  const reputation = session.reputation ?? 50;
+  const hasStarted = React.useRef(false);
 
-  // 1. Auth Check
+  // Auto-start Quick Match
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!session.userId) {
-        router.push('/onboarding');
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [session, router]);
+    if (!hasStarted.current) {
+      hasStarted.current = true;
+      // We need to defer execution slightly to ensure handleQuickMatch is ready
+      setTimeout(() => {
+        handleQuickMatch();
+      }, 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 2. Realtime Subscription for "Waiting" users
   useEffect(() => {
@@ -136,81 +137,93 @@ export default function QuickMatchPage() {
         </div>
 
         {/* Main Action Area */}
-        <div className="py-12 flex flex-col items-center justify-center">
+        <div className="py-12 flex flex-col items-center justify-center min-h-[400px]">
           {status === 'idle' && (
-            <div className="relative group">
-              {/* InkAura orb behind the button */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity">
-                <InkAura seed={auraSeed} reputation={reputation} size="lg" />
-              </div>
-              <button
-                onClick={handleQuickMatch}
-                className="relative w-48 h-48 rounded-full bg-slate-900/80 backdrop-blur-sm border-2 border-white/10 flex flex-col items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 z-10"
-              >
-                <Zap className="w-16 h-16 text-indigo-400 mb-2 fill-current" />
-                <span className="font-bold text-lg text-white">Tap to Match</span>
-              </button>
+            <div className="flex flex-col items-center">
+              <Loader2 className="w-12 h-12 text-indigo-400 animate-spin mb-4" />
+              <p className="text-white/50 text-lg">Initializing connection...</p>
             </div>
           )}
 
           {status === 'searching' && (
-            <div className="flex flex-col items-center">
-              {/* Pulsing InkAura during search */}
-              <div className="relative w-48 h-48 flex items-center justify-center">
-                <div className="absolute inset-0 flex items-center justify-center animate-pulse">
-                  <InkAura seed={auraSeed} reputation={reputation} size="lg" />
-                </div>
-                <div className="relative z-10 bg-slate-900/80 backdrop-blur-sm w-28 h-28 rounded-full flex items-center justify-center border border-white/10">
-                  <Loader2 className="w-10 h-10 text-indigo-400 animate-spin" />
-                </div>
+            <div className="flex flex-col items-center animate-in fade-in zoom-in duration-700">
+              {/* Pulsing Aura during search */}
+              <div className="relative mb-12">
+                <AuraSphere inkId={session.inkId || 'fallback'} size="lg" isPulsing={true} comfortLevel={session.comfortLevel as any} />
+
+                {/* Orbiting Search Ring */}
+                <div className="absolute inset-[-20%] rounded-full border border-dashed border-indigo-500/50 animate-[spin_4s_linear_infinite]" />
+                <div className="absolute inset-[-30%] rounded-full border border-purple-500/20 animate-[spin_8s_linear_infinite_reverse]" />
               </div>
-              <div className="mt-8 text-center">
-                <p className="text-lg font-medium text-white animate-pulse">Searching...</p>
-                <p className="text-sm text-white/40 mt-1">Finding your ink-compatible match</p>
+
+              <div className="text-center">
+                <p className="text-xl font-medium text-white tracking-widest uppercase flex items-center gap-3">
+                  <Activity className="w-5 h-5 text-indigo-400 animate-pulse" />
+                  Scanning Frequencies
+                </p>
+                <p className="text-sm text-white/40 mt-2 font-mono">Calibrating matching vectors...</p>
               </div>
             </div>
           )}
 
+          {/* Vibe Check Limbo State */}
           {status === 'matched' && (
-            <div className="flex flex-col items-center">
-              <div className="relative w-48 h-48 flex items-center justify-center">
-                <div className="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping" />
-                <div className="bg-slate-900/80 w-32 h-32 rounded-full flex flex-col items-center justify-center border-2 border-emerald-500 shadow-lg shadow-emerald-500/20">
-                  <Sparkles className="w-10 h-10 text-emerald-400 mb-1" />
-                  <Users className="w-6 h-6 text-emerald-400" />
+            <div className="flex flex-col items-center w-full animate-in slide-in-from-bottom-10 fade-in duration-1000">
+              <div className="text-center mb-10">
+                <p className="text-sm font-mono text-emerald-400 mb-2 tracking-widest uppercase">Signal Locked</p>
+                <h2 className="text-3xl font-bold text-white">Vibe Check</h2>
+                <p className="text-white/50 text-sm mt-2">A connection is forming. Prepare your energy.</p>
+              </div>
+
+              <div className="flex items-center justify-center gap-8 w-full">
+                {/* User's Aura */}
+                <div className="flex flex-col items-center">
+                  <AuraSphere inkId={session.inkId || 'fallback'} size="md" />
+                  <span className="text-xs text-white/40 mt-4 font-mono">YOU</span>
+                </div>
+
+                {/* The Spark / Connection Line */}
+                <div className="relative flex-1 max-w-[100px] h-[2px] bg-white/10">
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500 animate-[shimmer_2s_infinite]" style={{ backgroundSize: '200% 100%' }} />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-obsidian-900 border border-white/20 rounded-full p-2">
+                    <Sparkles className="w-4 h-4 text-white" />
+                  </div>
+                </div>
+
+                {/* Partner's Aura (Mysterious fallback since inkId isn't known until channel connects) */}
+                <div className="flex flex-col items-center">
+                  <AuraSphere inkId="mysterious_stranger" size="md" comfortLevel="bold" isPulsing={true} />
+                  <span className="text-xs text-white/40 mt-4 font-mono tracking-widest">UNKNOWN</span>
                 </div>
               </div>
-              <div className="mt-8">
-                <p className="text-lg font-bold text-emerald-400">Match Found!</p>
-                <p className="text-sm text-white/40 mt-1">Redirecting to chat...</p>
-                {/* Show chemistry meter for matched state */}
-                <div className="mt-4">
-                  <ChemistryMeter seed1={auraSeed} seed2={777} />
-                </div>
+
+              <div className="mt-12 bg-white/5 px-6 py-3 rounded-full border border-white/10 flex items-center gap-3 backdrop-blur-md">
+                <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />
+                <span className="text-sm text-white font-medium">Establishing Secure WebRTC Tunnel...</span>
               </div>
             </div>
           )}
 
           {status === 'error' && (
-            <div className="text-center">
-              <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl mb-6">
-                <p className="text-red-400 font-medium mb-2">Oops!</p>
+            <div className="text-center animate-in zoom-in-95 duration-300">
+              <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl mb-6 backdrop-blur-md">
+                <p className="text-red-400 font-medium mb-2">Connection Severed</p>
                 <p className="text-sm text-white/50">{errorMsg}</p>
               </div>
-              <Button onClick={() => setStatus('idle')} variant="secondary">Try Again</Button>
+              <Button onClick={() => setStatus('idle')} variant="secondary" className="px-8">Recalibrate & Retry</Button>
             </div>
           )}
         </div>
 
         {/* Features / Reassurance */}
         <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto pt-8 border-t border-white/5">
-          <div className="flex flex-col items-center">
-            <ShieldCheck className="w-6 h-6 text-emerald-400 mb-2" />
-            <span className="text-xs text-white/40 font-medium">Verified Privacy</span>
+          <div className="flex flex-col items-center glass-panel p-4">
+            <ShieldCheck className="w-6 h-6 text-indigo-400 mb-2" />
+            <span className="text-xs text-white/60 font-medium tracking-wide">ZERO DATA RETAINED</span>
           </div>
-          <div className="flex flex-col items-center">
-            <Users className="w-6 h-6 text-blue-400 mb-2" />
-            <span className="text-xs text-white/40 font-medium">Real People Only</span>
+          <div className="flex flex-col items-center glass-panel p-4">
+            <Users className="w-6 h-6 text-purple-400 mb-2" />
+            <span className="text-xs text-white/60 font-medium tracking-wide">ANONYMOUS P2P</span>
           </div>
         </div>
       </div>

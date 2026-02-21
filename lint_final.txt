@@ -1,0 +1,17 @@
+
+> inkhaven-chat@0.1.0 lint
+> eslint . --ext .ts,.tsx --fix
+
+
+C:\Users\PC\Music\inkhaven-chat\app\chat\[room]\page.tsx
+  86:41  error  React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+
+C:\Users\PC\Music\inkhaven-chat\app\quick-match\page.tsx
+  19:9  error  'auraSeed' is assigned a value but never used    no-unused-vars
+  20:9  error  'reputation' is assigned a value but never used  no-unused-vars
+
+C:\Users\PC\Music\inkhaven-chat\components\Chat\Glowpad.tsx
+  9:14  error  '_base64Image' is defined but never used  no-unused-vars
+
+Γ£û 4 problems (4 errors, 0 warnings)
+

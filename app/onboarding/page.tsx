@@ -4,6 +4,7 @@ import InterestSelector from '../../components/Profile/InterestSelector';
 import { useSessionStore } from '../../stores/useSessionStore';
 import { supabase } from '../../lib/supabase';
 import { Fingerprint, MessageCircle, Sparkles } from 'lucide-react';
+import AuraSphere from '../../components/Profile/AuraSphere';
 
 export default function Onboarding() {
   const router = useRouter();
@@ -86,12 +87,25 @@ export default function Onboarding() {
         </section>
 
         <section className="glass p-6">
-          <div className="card p-6">
-            <div className="flex items-center justify-between">
+          <div className="card p-6 border-white/5 bg-obsidian-900/50 relative overflow-hidden">
+            {/* Background ambient glow matching the potential aura */}
+            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none" />
+
+            <div className="flex items-center justify-between relative z-10">
               <h3 className="text-lg font-semibold text-white">Your profile</h3>
-              <span className="text-xs text-emerald-400">Private by design</span>
+              <span className="text-xs text-indigo-400 font-medium tracking-wide">InkHaven Identity</span>
             </div>
-            <div className="mt-6">
+
+            <div className="mt-8 mb-6 flex flex-col items-center justify-center relative z-10">
+              {/* Display a preview Aura. In a real app, this would dynamically update based on the typed name. For now, a placeholder preview. */}
+              <AuraSphere inkId="preview_123" size="lg" isPulsing={true} comfortLevel="bold" />
+              <div className="mt-4 text-center">
+                <p className="text-sm font-medium text-white/90 font-mono tracking-wider">PREVIEW AURA</p>
+                <p className="text-xs text-white/40 mt-1">This will adapt to your unique energy.</p>
+              </div>
+            </div>
+
+            <div className="mt-6 relative z-10">
               <InterestSelector onSubmit={handleSubmit} />
             </div>
           </div>

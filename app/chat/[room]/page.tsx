@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { SkipForward, Loader2 } from 'lucide-react';
+import { SkipForward, Loader2, Save } from 'lucide-react';
 import MessageList from '../../../components/Chat/MessageList';
 import MessageInput from '../../../components/Chat/MessageInput';
 import PresenceIndicator from '../../../components/Chat/PresenceIndicator';
@@ -12,7 +12,7 @@ import { AuraBlendBackground } from '../../../components/InkAura';
 import { useSessionStore } from '../../../stores/useSessionStore';
 import { useWebRTC } from '../../../lib/hooks/useWebRTC';
 import { supabase } from '../../../lib/supabase';
-import type { ReplyMessage } from '../../../components/Chat/MessageReply';
+import { useToast } from '../../../components/ui/toast';
 
 export default function ChatRoomPage() {
   const params = useParams();
@@ -20,10 +20,9 @@ export default function ChatRoomPage() {
   const session = useSessionStore((s) => s.session);
   const setSession = useSessionStore((s) => s.setSession);
   const [ready, setReady] = useState(false);
-  const [replyTo, setReplyTo] = useState<ReplyMessage | null>(null);
-  const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   const [skipping, setSkipping] = useState(false);
   const router = useRouter();
+  const toast = useToast();
 
   const myId = session.userId || 'guest_local';
   const myAuraSeed = session.auraSeed ?? 42;
@@ -55,19 +54,69 @@ export default function ChatRoomPage() {
     initAuth();
   }, [session, setSession]);
 
-  const handleReply = (message: any) => {
-    setReplyTo({
-      id: message.id,
-      content: message.content,
-      senderId: message.senderId,
-      senderName: message.senderId === myId ? 'You' : 'Partner',
-    });
-  };
+  const [panicked, setPanicked] = useState(false);
+
+  // The Zen Panic Switch (Double tap Escape)
+  useEffect(() => {
+    let lastEsc = 0;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        const now = Date.now();
+        if (now - lastEsc < 500) {
+          // Double tap detected
+          setPanicked(true);
+          document.title = "404 Not Found";
+        }
+        lastEsc = now;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const [myIntensity, setMyIntensity] = useState(0);
 
+  if (panicked) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8 font-mono text-black">
+        <h1 className="text-4xl font-bold mb-4">404 Not Found</h1>
+        <p>The requested URL was not found on this server.</p>
+        <p className="mt-8 text-sm text-gray-500 hover:text-indigo-500 cursor-pointer transition-colors" onClick={() => { setPanicked(false); document.title = "InkHaven | Anonymous & Safe Chat"; }}>[Click to restore]</p>
+      </div>
+    );
+  }
+
+  const handleSaveChat = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || user.is_anonymous) {
+        toast.error("You must register an account to save chats.");
+        return;
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+
+      if (token && messages.length > 0) {
+        await fetch('/api/chat/sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ roomId, messages }),
+          keepalive: true
+        });
+        toast.success("Chat history saved!");
+      } else {
+        toast.error("No messages to save yet.");
+      }
+    } catch (err) {
+      toast.error("Failed to save chat.");
+    }
+  };
+
   const handleSkipChat = async () => {
-    setShowSkipConfirm(false);
     setSkipping(true);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -127,10 +176,10 @@ export default function ChatRoomPage() {
 
   return (
     <div className="container mx-auto px-6 py-8">
-      <div className="card overflow-hidden">
+      <div className="hyper-glass overflow-hidden shadow-2xl border border-white/10">
         {/* Chat header */}
-        <div className="flex items-center justify-between border-b border-white/5 bg-white/[0.02] px-6 py-4">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between border-b border-white/5 bg-obsidian-900/40 backdrop-blur-md px-6 py-4">
+          <div className="flex items-center gap-4">
             {isConnected ? (
               <Avatar
                 userId={partnerId || 'partner'}
@@ -143,15 +192,15 @@ export default function ChatRoomPage() {
               <Avatar displayName="?" size="md" showStatus status={connectionState === 'connecting' ? 'away' : 'offline'} />
             )}
             <div>
-              <div className="text-lg font-semibold text-white">
-                {isConnected ? 'Anonymous Partner' : 'Waiting for connection...'}
+              <div className="text-xl font-bold text-white tracking-wide">
+                {isConnected ? 'Anonymous Partner' : 'Waiting in Limbo...'}
               </div>
-              <div className="text-xs text-white/40">
-                {connectionState === 'connecting' ? 'Negotiating P2P connection...' : connectionState === 'disconnected' ? 'Partner left' : 'Secure P2P Channel'}
+              <div className="text-xs text-indigo-300 font-mono tracking-wider mt-0.5">
+                {connectionState === 'connecting' ? 'NEGOTIATING P2P CONNECTION...' : connectionState === 'disconnected' ? 'PARTNER DISCONNECTED' : 'SECURE P2P CHANNEL'}
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <PresenceIndicator
               onlineCount={isConnected ? 2 : 1}
               partnerStatus={isConnected ? 'online' : 'offline'}
@@ -159,15 +208,23 @@ export default function ChatRoomPage() {
               isConnected={isConnected}
             />
             <button
-              onClick={() => setShowSkipConfirm(true)}
+              onClick={handleSaveChat}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 text-xs font-medium transition-all hover:scale-105 active:scale-95"
+              title="Save chat history"
+            >
+              <Save size={14} />
+              <span className="hidden sm:inline uppercase tracking-widest">Save</span>
+            </button>
+            <button
+              onClick={handleSkipChat}
               disabled={skipping}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Skip to next chat"
             >
               <SkipForward size={14} />
-              <span>Next</span>
+              <span className="uppercase tracking-widest">Next</span>
             </button>
-            <div className="pill border-indigo-500/50 text-indigo-400">P2P Encrypted</div>
+            <div className="pill border-indigo-500/30 text-indigo-400 bg-indigo-500/10 font-mono text-[10px] tracking-widest">P2P TUNNEL</div>
           </div>
         </div>
 
@@ -186,61 +243,17 @@ export default function ChatRoomPage() {
             myId={myId}
             messages={messages}
             partnerTyping={partnerTyping}
-            onReply={handleReply}
             onEdit={editMessage}
             onReact={reactToMessage}
           />
 
           <MessageInput
             myId={myId}
-            replyTo={replyTo as any}
-            onCancelReply={() => setReplyTo(null)}
             onIntensityChange={setMyIntensity}
             onSendMessage={sendMessage}
             onTyping={sendTyping}
           />
         </AuraBlendBackground>
-
-        {/* Skip confirmation dialog */}
-        <AnimatePresence>
-          {showSkipConfirm && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-              onClick={() => setShowSkipConfirm(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-slate-900 border border-white/10 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h3 className="text-lg font-semibold text-white mb-2">End this chat?</h3>
-                <p className="text-sm text-white/50 mb-6">
-                  This will end your current conversation and match you with a new person.
-                </p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowSkipConfirm(false)}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 text-sm font-medium transition"
-                  >
-                    Stay
-                  </button>
-                  <button
-                    onClick={handleSkipChat}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-400 text-sm font-medium transition flex items-center justify-center gap-2"
-                  >
-                    <SkipForward size={16} />
-                    Next Chat
-                  </button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Searching overlay */}
         <AnimatePresence>

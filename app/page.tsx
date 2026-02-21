@@ -19,8 +19,8 @@ const FloatingOrb = ({ delay, size, color, position }: { delay: number; size: st
 
 const GlowingCard = ({ children, className = '', gradient }: { children: React.ReactNode; className?: string; gradient: string }) => (
   <div className={`relative group ${className}`}>
-    <div className={`absolute -inset-0.5 bg-gradient-to-r ${gradient} rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500`} />
-    <div className="relative bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/50 dark:border-slate-700/50">
+    <div className={`absolute -inset-0.5 bg-gradient-to-r ${gradient} rounded-2xl blur-xl opacity-20 group-hover:opacity-60 transition duration-700`} />
+    <div className="hyper-glass p-6 h-full flex flex-col hover:-translate-y-1 transition-transform duration-500">
       {children}
     </div>
   </div>
@@ -72,12 +72,12 @@ export default function Page() {
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* Animated Background */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-indigo-50/30 to-emerald-50/20 dark:from-slate-950 dark:via-indigo-950/20 dark:to-emerald-950/10" />
-        <FloatingOrb delay={0} size="w-96 h-96" color="linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)" position="top-[-10%] left-[-5%]" />
-        <FloatingOrb delay={2} size="w-80 h-80" color="linear-gradient(135deg, #10b981 0%, #14b8a6 100%)" position="top-[20%] right-[-10%]" />
-        <FloatingOrb delay={4} size="w-72 h-72" color="linear-gradient(135deg, #f59e0b 0%, #f97316 100%)" position="bottom-[10%] left-[20%]" />
-        <FloatingOrb delay={6} size="w-64 h-64" color="linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)" position="bottom-[-5%] right-[15%]" />
+      <div className="fixed inset-0 -z-10 bg-obsidian-950">
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay" />
+        <FloatingOrb delay={0} size="w-96 h-96" color="linear-gradient(135deg, rgba(99, 102, 241, 0.4) 0%, rgba(139, 92, 246, 0.4) 100%)" position="top-[-10%] left-[-5%]" />
+        <FloatingOrb delay={2} size="w-80 h-80" color="linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(20, 184, 166, 0.3) 100%)" position="top-[20%] right-[-10%]" />
+        <FloatingOrb delay={4} size="w-72 h-72" color="linear-gradient(135deg, rgba(236, 72, 153, 0.3) 0%, rgba(244, 63, 94, 0.3) 100%)" position="bottom-[10%] left-[20%]" />
+        <FloatingOrb delay={6} size="w-112 h-112" color="radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, transparent 60%)" position="top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2" />
       </div>
 
       {/* Hero Section */}
@@ -228,17 +228,17 @@ export default function Page() {
       {/* CTA Section */}
       <section className="container mx-auto px-6 py-20">
         <div className="relative max-w-4xl mx-auto text-center">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 rounded-3xl blur-3xl" />
-          <div className="relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-12 border border-slate-200/50 dark:border-slate-700/50">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">
-              Ready to experience <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">real connection</span>?
+          <div className="hyper-glass p-12 overflow-visible">
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 blur-3xl -z-10" />
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
+              Ready to experience <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">real connection</span>?
             </h2>
-            <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 max-w-xl mx-auto">
-              Join thousands of users who have found their space for authentic, anonymous conversations.
+            <p className="text-lg text-white/60 mb-10 max-w-xl mx-auto">
+              Join thousands of users who have found their space for authentic, anonymous conversations in the ultimate hyper-glass sanctuary.
             </p>
-            <Button asChild size="lg" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-10 py-4 text-lg rounded-xl shadow-lg shadow-indigo-500/25">
+            <Button asChild size="lg" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-10 py-6 text-lg rounded-full shadow-[0_0_40px_rgba(99,102,241,0.4)] hover:shadow-[0_0_60px_rgba(99,102,241,0.6)] transition-all transform hover:scale-105">
               <Link href="/onboarding">
-                Create Your Anonymous Profile <span className="ml-2">→</span>
+                Enter The Sanctuary <span className="ml-2">→</span>
               </Link>
             </Button>
           </div>
