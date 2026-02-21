@@ -9,6 +9,7 @@ import { createLogger } from '../logger/Logger';
 import { ValidationError, NotFoundError } from '../errors/AppError';
 import { updateProfileSchema, UpdateProfileInput } from '../schemas';
 import { computeEmbedding } from '../embeddings';
+import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generator';
 
 const logger = createLogger('ProfileService');
 
@@ -44,7 +45,13 @@ export class ProfileService {
         try {
             logger.info('Creating profile', { userId, displayName });
 
-            const inkId = `ink_${userId.replace(/-/g, '').slice(0, 8)}`;
+            const eyeCatchyId = uniqueNamesGenerator({
+                dictionaries: [adjectives, animals],
+                separator: '',
+                style: 'capital'
+            });
+            const randomDigits = Math.floor(10 + Math.random() * 90);
+            const inkId = `${eyeCatchyId}${randomDigits}`;
 
             const { data, error } = await supabaseAdmin
                 .from('profiles')

@@ -3,6 +3,7 @@ import { supabaseAdmin } from '../supabaseAdmin';
 import { createLogger } from '../logger/Logger';
 import { AppError } from '../errors/AppError';
 import { MatchingError } from '../errors/AppError';
+import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
 
 const logger = createLogger('QuickMatchService');
 const QUEUE_KEY = 'quick_match_queue';
@@ -43,12 +44,16 @@ export class QuickMatchService {
             if (partnerId && partnerId !== userId) {
                 logger.info('Partner popped from queue', { userId, partnerId });
 
-                // We have a match! Generate a UUID for the WebRTC room.
-                const roomId = crypto.randomUUID();
-                
+                // We have a match! Generate an eye-catchy string for the WebRTC room.
+                const roomId = uniqueNamesGenerator({
+                    dictionaries: [adjectives, colors, animals],
+                    separator: '-',
+                    length: 3
+                });
+
                 // Notify the partner by setting their match key (expires in 30 seconds)
                 await redis.setex(`match:${partnerId}`, 30, roomId);
-                
+
                 logger.info('In-Memory Room created', { roomId, userId, partnerId });
 
                 return {
@@ -101,7 +106,7 @@ export class QuickMatchService {
 
             // In WebRTC, we don't need to deactivate DB participants or send system messages from the server,
             // because there is no server! The P2P connection simply closes.
-            
+
             // We STILL optionally record the skip in match history for safety metrics (best effort)
             try {
                 await supabaseAdmin
