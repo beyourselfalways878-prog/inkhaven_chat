@@ -16,31 +16,32 @@ export interface WebRTCMessage {
 
 export type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'failed';
 
+const METERED_DOMAIN = process.env.NEXT_PUBLIC_METERED_DOMAIN || "inkhaven.metered.live";
 const METERED_USERNAME = process.env.NEXT_PUBLIC_METERED_TURN_USERNAME || "ecbd7a98d14a357e0529d58f";
 const METERED_CREDENTIAL = process.env.NEXT_PUBLIC_METERED_TURN_CREDENTIAL || "Dfov44eAgjeSEVr9";
 
 const RTC_CONFIG = {
     iceServers: [
         {
-            urls: "stun:stun.relay.metered.ca:80",
+            urls: `stun:${METERED_DOMAIN}:80`,
         },
         {
-            urls: "turn:global.relay.metered.ca:80",
+            urls: `turn:${METERED_DOMAIN}:80`,
             username: METERED_USERNAME,
             credential: METERED_CREDENTIAL,
         },
         {
-            urls: "turn:global.relay.metered.ca:80?transport=tcp",
+            urls: `turn:${METERED_DOMAIN}:80?transport=tcp`,
             username: METERED_USERNAME,
             credential: METERED_CREDENTIAL,
         },
         {
-            urls: "turn:global.relay.metered.ca:443",
+            urls: `turn:${METERED_DOMAIN}:443`,
             username: METERED_USERNAME,
             credential: METERED_CREDENTIAL,
         },
         {
-            urls: "turns:global.relay.metered.ca:443?transport=tcp",
+            urls: `turns:${METERED_DOMAIN}:443?transport=tcp`,
             username: METERED_USERNAME,
             credential: METERED_CREDENTIAL,
         },
@@ -58,6 +59,7 @@ export function useWebRTC(roomId: string, userId: string) {
     const dataChannelRef = useRef<RTCDataChannel | null>(null);
     const seenOffersRef = useRef<Set<string>>(new Set());
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const pendingCandidatesRef = useRef<any[]>([]);
 
     // Initialize WebRTC
     useEffect(() => {
@@ -99,6 +101,13 @@ export function useWebRTC(roomId: string, userId: string) {
                     seenOffersRef.current.add(senderId);
 
                     await pc.setRemoteDescription(new RTCSessionDescription(data));
+
+                    // Flush pending ICE candidates if they arrived early
+                    for (const candidate of pendingCandidatesRef.current) {
+                        try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) { console.warn('ICE Candidate Exception', e); }
+                    }
+                    pendingCandidatesRef.current = [];
+
                     const answer = await pc.createAnswer();
                     await pc.setLocalDescription(answer);
 
@@ -109,8 +118,19 @@ export function useWebRTC(roomId: string, userId: string) {
                     });
                 } else if (type === 'ANSWER') {
                     await pc.setRemoteDescription(new RTCSessionDescription(data));
+
+                    // Flush pending ICE candidates if they arrived early
+                    for (const candidate of pendingCandidatesRef.current) {
+                        try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) { console.warn('ICE Candidate Exception', e); }
+                    }
+                    pendingCandidatesRef.current = [];
                 } else if (type === 'ICE_CANDIDATE') {
-                    await pc.addIceCandidate(new RTCIceCandidate(data));
+                    if (pc.remoteDescription && pc.remoteDescription.type) {
+                        await pc.addIceCandidate(new RTCIceCandidate(data));
+                    } else {
+                        // Queue the candidate until Remote Description is set to prevent race conditions
+                        pendingCandidatesRef.current.push(data);
+                    }
                 }
             } catch (err) {
                 console.error('[WebRTC] Signaling error:', err);

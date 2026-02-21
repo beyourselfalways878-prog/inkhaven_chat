@@ -1,0 +1,12 @@
+
+> inkhaven-chat@0.1.0 lint
+> eslint . --ext .ts,.tsx --fix
+
+
+C:\Users\PC\Music\inkhaven-chat\lib\hooks\useWebRTC.ts
+   62:41   error  'RTCIceCandidateInit' is not defined  no-undef
+  107:101  error  Empty block statement                 no-empty
+  124:101  error  Empty block statement                 no-empty
+
+Γ£û 3 problems (3 errors, 0 warnings)
+
