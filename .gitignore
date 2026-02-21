@@ -29,3 +29,10 @@ tsconfig.tsbuildinfo
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Playwright Test Artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+playwright-logs.txt
