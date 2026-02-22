@@ -57,7 +57,7 @@ export const metadata = {
     },
   },
   verification: {
-    google: 'Your-Google-Verification-Code', // User needs to replace this
+    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || '', // The user will inject this via Vercel env
   },
   other: {
     'google-adsense-account': 'ca-pub-7229649791586904'

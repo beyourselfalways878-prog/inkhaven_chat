@@ -10,6 +10,7 @@ import { EmojiToggle } from './EmojiPicker';
 import Glowpad from './Glowpad';
 import { MessageReplyPreview, type ReplyMessage } from './MessageReply';
 import type { WebRTCMessage } from '../../lib/hooks/useWebRTC';
+import { supabase } from '../../lib/supabase';
 
 interface MessageInputProps {
   myId: string;
@@ -37,6 +38,14 @@ export default function MessageInput({ myId, replyTo, onCancelReply, onIntensity
   const onSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!value.trim()) return;
+
+    // Token Expiration Edge-Case: Check session before sending
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) {
+      localStorage.setItem(`inkhaven_draft_${myId}`, value.trim());
+      setBlockedMessage('Session expired or network disconnected. Secure draft saved locally.');
+      return;
+    }
 
     // Outgoing spam protection: max 5 messages per 3 seconds
     const now = Date.now();
@@ -158,13 +167,19 @@ export default function MessageInput({ myId, replyTo, onCancelReply, onIntensity
         const parsed = JSON.parse(stored);
         if (typeof parsed?.safetyFilter === 'boolean') setSafetyEnabled(parsed.safetyFilter);
       }
+
+      const draft = localStorage.getItem(`inkhaven_draft_${myId}`);
+      if (draft) {
+        setValue(draft);
+        localStorage.removeItem(`inkhaven_draft_${myId}`);
+      }
     } catch {
       // ignore
     }
     return () => {
       if (typingTimer.current) window.clearTimeout(typingTimer.current);
     };
-  }, []);
+  }, [myId]);
 
   // Focus input when replying
   useEffect(() => {

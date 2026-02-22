@@ -62,6 +62,7 @@ export function useWebRTC(roomId: string, userId: string) {
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const pendingCandidatesRef = useRef<any[]>([]);
     const incomingRateRef = useRef<number[]>([]);
+    const outboxRef = useRef<WebRTCMessage[]>([]);
 
     const playNotificationSound = useCallback(() => {
         try {
@@ -195,8 +196,22 @@ export function useWebRTC(roomId: string, userId: string) {
         };
 
         const setupDataChannel = (dc: RTCDataChannel) => {
+            dataChannelRef.current = dc;
+
             dc.onopen = () => {
                 setConnectionState('connected');
+                // Flush outbox on reconnect or successful open
+                if (outboxRef.current.length > 0) {
+                    outboxRef.current.forEach(queuedMsg => {
+                        try {
+                            dc.send(JSON.stringify({ type: 'CHAT', payload: queuedMsg }));
+                            setMessages(prev => prev.map(m => m.id === queuedMsg.id ? { ...m, status: 'sent' } : m));
+                        } catch (e) {
+                            console.error('Failed to flush queued message', e);
+                        }
+                    });
+                    outboxRef.current = [];
+                }
             };
             dc.onclose = () => {
                 setConnectionState('disconnected');
@@ -333,10 +348,6 @@ export function useWebRTC(roomId: string, userId: string) {
 
     // Send Message Over P2P
     const sendMessage = useCallback((content: string, messageType: WebRTCMessage['messageType'] = 'text', replyToId?: string, metadata?: any) => {
-        if (!dataChannelRef.current || dataChannelRef.current.readyState !== 'open') {
-            return null;
-        }
-
         const newMsg: WebRTCMessage = {
             id: crypto.randomUUID(),
             senderId: userId,
@@ -345,10 +356,18 @@ export function useWebRTC(roomId: string, userId: string) {
             replyToId,
             messageType,
             metadata,
-            status: 'sent'
+            status: 'sending'
         };
 
+        // If the tunnel is physically severed or disconnected during network shifts, push to the isolated outbox queue!
+        if (!dataChannelRef.current || dataChannelRef.current.readyState !== 'open') {
+            outboxRef.current.push(newMsg);
+            setMessages(prev => [...prev, newMsg]); // Display instantly as "sending..." in UI
+            return newMsg;
+        }
+
         dataChannelRef.current.send(JSON.stringify({ type: 'CHAT', payload: newMsg }));
+        newMsg.status = 'sent';
         setMessages(prev => [...prev, newMsg]);
         return newMsg;
     }, [userId]);
