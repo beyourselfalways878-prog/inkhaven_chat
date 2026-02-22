@@ -4,7 +4,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import NextImage from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Reply, Smile, Pencil } from 'lucide-react';
+import { Reply, Smile, Pencil, Check, CheckCheck } from 'lucide-react';
 import { MessageReplyInline } from './MessageReply';
 import type { WebRTCMessage } from '../../lib/hooks/useWebRTC';
 
@@ -237,9 +237,17 @@ export default function MessageBubble({ message, isMine, onReply, onEdit, onReac
           )}
 
           {/* Timestamp + status */}
-          <div className="mt-1 flex items-center justify-end gap-1.5 text-[10px] opacity-50">
-            {message.isEdited && <span className="italic">edited</span>}
-            <span>{new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <div className="mt-1 flex items-center justify-end gap-1.5 text-[10px]">
+            {message.isEdited && <span className="italic opacity-50">edited</span>}
+            <span className="opacity-50">{new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            {isMine && message.status && (
+              <span className="ml-0.5 flex items-center">
+                {message.status === 'sending' && <Check className="w-3.5 h-3.5 text-white/30" />}
+                {message.status === 'sent' && <Check className="w-3.5 h-3.5 text-white/50" />}
+                {message.status === 'delivered' && <CheckCheck className="w-3.5 h-3.5 text-white/50" />}
+                {message.status === 'read' && <CheckCheck className="w-3.5 h-3.5 text-[#4ea8de]" />}
+              </span>
+            )}
           </div>
         </div>
 

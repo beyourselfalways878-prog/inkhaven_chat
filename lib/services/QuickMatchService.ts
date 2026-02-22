@@ -17,9 +17,9 @@ export interface QuickMatchResult {
 export class QuickMatchService {
     /**
      * Find a match or enqueue the user purely in memory using Redis.
-     * No Postgres database inserts = Massive Scaling capability.
+     * Optionally takes an array of interests to prioritized targeted matching.
      */
-    async findMatch(userId: string): Promise<QuickMatchResult> {
+    async findMatch(userId: string, interests: string[] = []): Promise<QuickMatchResult> {
         if (!redis) {
             throw new AppError('SERVICE_UNAVAILABLE', 'Matching service unavailable', 503);
         }
@@ -39,11 +39,60 @@ export class QuickMatchService {
             }
 
             // 2. Try to pop a partner from the queue
-            const partnerId = await redis.rpop(QUEUE_KEY) as string | null;
+            let partnerId = null;
 
-            if (partnerId && partnerId !== userId) {
-                logger.info('Partner popped from queue', { userId, partnerId });
+            // 2a. Attempt interest-based matching first
+            if (interests.length > 0) {
+                // Normalize and deduplicate tags
+                const tags = [...new Set(interests.map(t => t.toLowerCase().trim()).filter(Boolean))];
 
+                for (const tag of tags) {
+                    const tagKey = `interest:${tag}`;
+                    const potentialPartner = await redis.spop(tagKey) as string | null;
+                    if (potentialPartner && potentialPartner !== userId) {
+                        partnerId = potentialPartner;
+                        logger.info('Found partner via interest match', { userId, partnerId, tag });
+                        break;
+                    } else if (potentialPartner === userId) {
+                        // We popped ourselves somehow, put it back
+                        await redis.sadd(tagKey, userId);
+                    }
+                }
+
+                // If no partner was found via interests, add the user to these interest sets so others can find them
+                if (!partnerId) {
+                    const multi = redis.multi();
+                    for (const tag of tags) {
+                        multi.sadd(`interest:${tag}`, userId);
+                    }
+                    // Keep track of which tags the user is in so we can clean them up on 'leave'
+                    if (tags.length > 0) {
+                        multi.sadd(`userTags:${userId}`, ...(tags as [string, ...string[]]));
+                    }
+                    await multi.exec();
+                    logger.info('User added to interest matching pools', { userId, tags });
+
+                    // We don't immediately add them to the global queue yet if they specified interests.
+                    // The frontend will re-poll without interests as a 'fallback' later if needed.
+                    return {
+                        matchFound: false,
+                        status: 'waiting'
+                    };
+                }
+            }
+
+            // 2b. If no interests provided, try the global quick match queue
+            if (!partnerId) {
+                const popped = await redis.rpop(QUEUE_KEY) as string | null;
+                if (popped && popped !== userId) {
+                    partnerId = popped;
+                    logger.info('Partner popped from global queue', { userId, partnerId });
+                } else if (popped === userId) {
+                    logger.info('Popped self from queue, ignoring', { userId });
+                }
+            }
+
+            if (partnerId) {
                 // We have a match! Generate an eye-catchy string for the WebRTC room.
                 const roomId = uniqueNamesGenerator({
                     dictionaries: [adjectives, colors, animals],
@@ -89,9 +138,22 @@ export class QuickMatchService {
     async leaveQueue(userId: string): Promise<void> {
         if (!redis) return;
         try {
-            await redis.lrem(QUEUE_KEY, 0, userId);
-            await redis.del(`match:${userId}`); // Also clear any pending matches
-            logger.info('User removed from quick match queue', { userId });
+            const multi = redis.multi();
+            multi.lrem(QUEUE_KEY, 0, userId);
+            multi.del(`match:${userId}`); // Also clear any pending matches
+
+            // Cleanup interest sets
+            const userTagsKey = `userTags:${userId}`;
+            const tags = await redis.smembers(userTagsKey);
+            if (tags && tags.length > 0) {
+                for (const tag of tags) {
+                    multi.srem(`interest:${tag}`, userId);
+                }
+                multi.del(userTagsKey);
+            }
+
+            await multi.exec();
+            logger.info('User removed from all quick match queues and sets', { userId });
         } catch (error) {
             logger.error('Failed to leave queue', { userId, error });
         }

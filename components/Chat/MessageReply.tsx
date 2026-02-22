@@ -41,7 +41,7 @@ export function MessageReplyPreview({ replyTo, onCancel }: MessageReplyPreviewPr
             <Reply size={14} className="text-indigo-400 flex-shrink-0" />
             <div className="flex-1 min-w-0">
                 <p className="text-[11px] font-medium text-indigo-400">{displayName}</p>
-                <p className="text-xs text-white/40 truncate">{truncated}</p>
+                <p className="text-xs text-white/70 truncate">{truncated}</p>
             </div>
             <button
                 onClick={onCancel}
@@ -81,10 +81,10 @@ export function MessageReplyInline({ replyTo, isMine }: MessageReplyInlineProps)
         >
             <div className={`w-0.5 h-full min-h-[24px] rounded-full flex-shrink-0 ${isMine ? 'bg-white/30' : 'bg-indigo-500/50'}`} />
             <div className="min-w-0">
-                <p className={`text-[10px] font-medium ${isMine ? 'text-white/60' : 'text-indigo-400'}`}>
+                <p className={`text-[10px] font-medium ${isMine ? 'text-white/90' : 'text-indigo-400'}`}>
                     {displayName}
                 </p>
-                <p className="text-[11px] text-white/40 truncate">{truncated}</p>
+                <p className={`text-[11px] truncate ${isMine ? 'text-white/80' : 'text-white/70'}`}>{truncated}</p>
             </div>
         </div>
     );

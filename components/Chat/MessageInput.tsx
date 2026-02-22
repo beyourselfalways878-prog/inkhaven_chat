@@ -29,12 +29,23 @@ export default function MessageInput({ myId, replyTo, onCancelReply, onIntensity
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [showGlowpad, setShowGlowpad] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const typingTimer = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const outgoingRateRef = useRef<number[]>([]);
 
   const onSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!value.trim()) return;
+
+    // Outgoing spam protection: max 5 messages per 3 seconds
+    const now = Date.now();
+    outgoingRateRef.current = [...outgoingRateRef.current, now].slice(-5);
+    if (outgoingRateRef.current.length === 5 && (now - outgoingRateRef.current[0]) < 3000) {
+      setBlockedMessage('You are sending messages too fast. Please slow down.');
+      return;
+    }
+
     setBlockedMessage(null);
     if (safetyEnabled) {
       setChecking(true);
@@ -109,6 +120,24 @@ export default function MessageInput({ myId, replyTo, onCancelReply, onIntensity
     } catch (err) {
       console.error('File upload failed:', err);
       setBlockedMessage('Failed to upload file. Please try again.');
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileSelected(e.dataTransfer.files[0]);
     }
   };
 
@@ -210,7 +239,26 @@ export default function MessageInput({ myId, replyTo, onCancelReply, onIntensity
   const isBusy = checking;
 
   return (
-    <div className="border-t border-white/5 bg-slate-900/80 backdrop-blur-sm">
+    <div
+      className="relative border-t border-white/5 bg-slate-900/80 backdrop-blur-sm"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <AnimatePresence>
+        {isDragging && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-indigo-500/10 backdrop-blur-sm border-2 border-dashed border-indigo-500 rounded-t-xl flex items-center justify-center flex-col gap-2"
+          >
+            <Paperclip className="w-8 h-8 text-indigo-400 animate-bounce" />
+            <span className="text-sm font-medium text-indigo-300">Drop file to upload</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {replyTo && onCancelReply && (
           <MessageReplyPreview replyTo={replyTo as any} onCancel={onCancelReply} />

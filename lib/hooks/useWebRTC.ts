@@ -12,6 +12,7 @@ export interface WebRTCMessage {
     metadata?: any;
     reactions?: string[];
     isEdited?: boolean;
+    status?: 'sending' | 'sent' | 'delivered' | 'read';
 }
 
 export type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'failed';
@@ -60,6 +61,45 @@ export function useWebRTC(roomId: string, userId: string) {
     const seenOffersRef = useRef<Set<string>>(new Set());
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const pendingCandidatesRef = useRef<any[]>([]);
+    const incomingRateRef = useRef<number[]>([]);
+
+    const playNotificationSound = useCallback(() => {
+        try {
+            if (typeof window === 'undefined' || !document.hidden) return;
+            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.1);
+            if (navigator.vibrate) navigator.vibrate([200]);
+        } catch (e) {
+            // ignore
+        }
+    }, []);
+
+    // Read receipts sync
+    useEffect(() => {
+        const handleFocus = () => {
+            if (dataChannelRef.current?.readyState === 'open') {
+                dataChannelRef.current.send(JSON.stringify({ type: 'READ_ALL', payload: {} }));
+            }
+        };
+        const handleVis = () => { if (!document.hidden) handleFocus(); };
+        window.addEventListener('focus', handleFocus);
+        window.addEventListener('visibilitychange', handleVis);
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+            window.removeEventListener('visibilitychange', handleVis);
+        };
+    }, []);
 
     // Initialize WebRTC
     useEffect(() => {
@@ -165,8 +205,34 @@ export function useWebRTC(roomId: string, userId: string) {
                 try {
                     const event = JSON.parse(e.data);
 
+                    // P2P Rate Limiting: Max 10 messages/events per 2 seconds
+                    const now = Date.now();
+                    incomingRateRef.current = [...incomingRateRef.current, now].slice(-10);
+                    if (incomingRateRef.current.length === 10 && (now - incomingRateRef.current[0]) < 2000) {
+                        console.warn('[WebRTC] Rate limit exceeded by partner, dropping payload.');
+                        return;
+                    }
+
                     if (event.type === 'CHAT') {
+                        playNotificationSound();
                         setMessages(prev => [...prev, event.payload]);
+
+                        // Send ACK
+                        const isRead = !document.hidden;
+                        try {
+                            dc.send(JSON.stringify({
+                                type: 'ACK',
+                                payload: { id: event.payload.id, status: isRead ? 'read' : 'delivered' }
+                            }));
+                        } catch (e) {
+                            console.error('Failed to send ACK', e);
+                        }
+                    }
+                    else if (event.type === 'ACK') {
+                        setMessages(prev => prev.map(m => m.id === event.payload.id ? { ...m, status: event.payload.status } : m));
+                    }
+                    else if (event.type === 'READ_ALL') {
+                        setMessages(prev => prev.map(m => m.senderId === userId ? { ...m, status: 'read' as const } : m));
                     }
                     else if (event.type === 'TYPING') {
                         setPartnerTyping(event.payload.isTyping);
@@ -263,7 +329,7 @@ export function useWebRTC(roomId: string, userId: string) {
             supabase.removeChannel(sigChannel);
             if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         };
-    }, [roomId, userId]);
+    }, [roomId, userId, playNotificationSound]);
 
     // Send Message Over P2P
     const sendMessage = useCallback((content: string, messageType: WebRTCMessage['messageType'] = 'text', replyToId?: string, metadata?: any) => {
@@ -278,7 +344,8 @@ export function useWebRTC(roomId: string, userId: string) {
             createdAt: new Date().toISOString(),
             replyToId,
             messageType,
-            metadata
+            metadata,
+            status: 'sent'
         };
 
         dataChannelRef.current.send(JSON.stringify({ type: 'CHAT', payload: newMsg }));

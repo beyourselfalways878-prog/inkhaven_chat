@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { SkipForward, Loader2, Save } from 'lucide-react';
+import { SkipForward, Loader2, Save, ShieldAlert, Ban } from 'lucide-react';
 import MessageList from '../../../components/Chat/MessageList';
 import MessageInput from '../../../components/Chat/MessageInput';
 import PresenceIndicator from '../../../components/Chat/PresenceIndicator';
@@ -23,6 +23,8 @@ export default function ChatRoomPage() {
   const [skipping, setSkipping] = useState(false);
   const router = useRouter();
   const toast = useToast();
+  const [isReporting, setIsReporting] = useState(false);
+  const [reportReason, setReportReason] = useState("");
 
   const myId = session.userId || 'guest_local';
   const myAuraSeed = session.auraSeed ?? 42;
@@ -159,6 +161,49 @@ export default function ChatRoomPage() {
     }
   };
 
+  const handleBlockPartner = async () => {
+    if (!partnerId) return;
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+
+      await fetch('/api/moderation/block', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ blockedId: partnerId })
+      });
+      toast.success("User blocked. Finding next match...");
+      handleSkipChat();
+    } catch (e) {
+      toast.error("Failed to block user.");
+    }
+  };
+
+  const submitReport = async () => {
+    if (!partnerId || !reportReason.trim()) return;
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+
+      await fetch('/api/moderation/report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ reportedId: partnerId, roomId, reason: reportReason })
+      });
+      toast.success("User reported successfully.");
+      setIsReporting(false);
+      setReportReason("");
+    } catch (e) {
+      toast.error("Failed to submit report.");
+    }
+  };
+
   if (!ready) {
     return (
       <div className="container mx-auto px-6 py-10">
@@ -216,6 +261,24 @@ export default function ChatRoomPage() {
               <span className="hidden sm:inline uppercase tracking-widest">Save</span>
             </button>
             <button
+              onClick={() => setIsReporting(true)}
+              disabled={!isConnected || !partnerId}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-500 text-xs font-medium transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Report user"
+            >
+              <ShieldAlert size={14} />
+              <span className="hidden sm:inline uppercase tracking-widest">Report</span>
+            </button>
+            <button
+              onClick={handleBlockPartner}
+              disabled={!isConnected || !partnerId}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 text-xs font-medium transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Block user"
+            >
+              <Ban size={14} />
+              <span className="hidden lg:inline uppercase tracking-widest">Block</span>
+            </button>
+            <button
               onClick={handleSkipChat}
               disabled={skipping}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -224,7 +287,7 @@ export default function ChatRoomPage() {
               <SkipForward size={14} />
               <span className="uppercase tracking-widest">Next</span>
             </button>
-            <div className="pill border-indigo-500/30 text-indigo-400 bg-indigo-500/10 font-mono text-[10px] tracking-widest">P2P TUNNEL</div>
+            <div className="pill border-indigo-500/30 text-indigo-400 bg-indigo-500/10 font-mono text-[10px] tracking-widest -ml-2">P2P TUNNEL</div>
           </div>
         </div>
 
@@ -267,6 +330,31 @@ export default function ChatRoomPage() {
               <Loader2 className="w-12 h-12 text-indigo-400 animate-spin mb-4" />
               <p className="text-lg font-medium text-white animate-pulse">Finding your next match...</p>
               <p className="text-sm text-white/40 mt-1">Hang tight</p>
+            </motion.div>
+          )}
+
+          {isReporting && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            >
+              <div className="bg-obsidian-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm">
+                <h3 className="text-xl font-bold text-white mb-2">Report User</h3>
+                <p className="text-sm text-white/50 mb-4">Please specify why you are reporting this user. This action is closely monitored.</p>
+                <textarea
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors mb-4 resize-none"
+                  rows={4}
+                  placeholder="Reason for reporting..."
+                />
+                <div className="flex justify-end gap-3">
+                  <button onClick={() => setIsReporting(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-white/60 hover:text-white transition-colors">Cancel</button>
+                  <button onClick={submitReport} disabled={!reportReason.trim()} className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium transition-colors disabled:opacity-50">Submit Report</button>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

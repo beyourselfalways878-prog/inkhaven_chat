@@ -7,27 +7,90 @@ import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/button';
 import AuraSphere from '../../components/Profile/AuraSphere';
 import { useToast } from '../../components/ui/toast';
-import { Loader2, Users, ShieldCheck, Sparkles, Activity } from 'lucide-react';
+import { Loader2, Users, ShieldCheck, Sparkles, Activity, Hash, X } from 'lucide-react';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export default function QuickMatchPage() {
   const router = useRouter();
   const { session } = useSessionStore();
   const [status, setStatus] = useState<'idle' | 'searching' | 'matched' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [interestInput, setInterestInput] = useState('');
+  const [interests, setInterests] = useState<string[]>([]);
   const toast = useToast();
 
   const hasStarted = React.useRef(false);
 
-  // Auto-start Quick Match
-  useEffect(() => {
-    if (!hasStarted.current) {
-      hasStarted.current = true;
-      // We need to defer execution slightly to ensure handleQuickMatch is ready
-      setTimeout(() => {
-        handleQuickMatch();
-      }, 0);
+  const handleQuickMatch = async (forceGlobal: boolean = false) => {
+    try {
+      setStatus('searching');
+      setErrorMsg('');
+
+      // Get auth token from Supabase session
+      const { data: sessionData } = await supabase.auth.getSession();
+      let token = sessionData?.session?.access_token ?? null;
+
+      if (!token) {
+        const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
+        if (anonError) throw anonError;
+        token = anonData.session?.access_token ?? null;
+        const userId = anonData.user?.id ?? session.userId;
+        useSessionStore.getState().setSession({ ...session, userId });
+      }
+
+      if (!token) {
+        throw new Error('Unable to authenticate. Please try refreshing the page.');
+      }
+
+      if (!turnstileToken) {
+        throw new Error('Please complete the security check before matching.');
+      }
+
+      const res = await fetch('/api/quick-match', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'X-Turnstile-Token': turnstileToken
+        },
+        body: JSON.stringify({
+          interests: forceGlobal ? [] : interests // Send empty array to force fallback
+        })
+      });
+
+      if (!res.ok) {
+        const errorBody = await res.json().catch(() => ({}));
+        throw new Error(errorBody.message || `Failed to join queue: ${res.statusText}`);
+      }
+
+      const data = await res.json();
+
+      if (data.data.matchFound && data.data.roomId) {
+        setStatus('matched');
+        toast.success('Match found! Connecting you now...');
+        router.push(`/chat/${data.data.roomId}`);
+      } else if (!forceGlobal && interests.length > 0) {
+        // We are searching in interest pools, but didn't find anyone instantly.
+        // Set a timeout to fallback to global pool if no one joins our interest set.
+        setTimeout(() => {
+          // We use a window timeout to trigger a re-match if needed. 
+          // We dispatch a custom event that a useEffect will listen to so we don't violate React Hook closure rules.
+          window.dispatchEvent(new CustomEvent('interest_match_timeout'));
+        }, 12000); // 12 seconds
+      }
+    } catch (err: any) {
+      console.error('Quick Match Error:', err);
+      setStatus('error');
+      setErrorMsg(err.message || 'Something went wrong. Please try again.');
+      toast.error(err.message || 'Something went wrong.');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  };
+
+  // Remove auto-start if we want users to take time to enter interests.
+  // Instead, the user will explicitly click a "Start Vibe Check" button.
+  useEffect(() => {
+    hasStarted.current = true;
   }, []);
 
   // 2. Realtime Subscription for "Waiting" users
@@ -59,55 +122,36 @@ export default function QuickMatchPage() {
     };
   }, [status, session.userId, router, toast]);
 
-  const handleQuickMatch = async () => {
-    try {
-      setStatus('searching');
-      setErrorMsg('');
-
-      // Get auth token from Supabase session
-      const { data: sessionData } = await supabase.auth.getSession();
-      let token = sessionData?.session?.access_token ?? null;
-
-      if (!token) {
-        const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
-        if (anonError) throw anonError;
-        token = anonData.session?.access_token ?? null;
-        const userId = anonData.user?.id ?? session.userId;
-        useSessionStore.getState().setSession({ ...session, userId });
+  // Handle Interest Tag Input
+  const handleAddInterest = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const newTag = interestInput.trim().toLowerCase();
+      // Filter out spaces, special chars, keep it clean
+      const cleanTag = newTag.replace(/[^a-z0-9]/g, '');
+      if (cleanTag && !interests.includes(cleanTag) && interests.length < 5) {
+        setInterests([...interests, cleanTag]);
+        setInterestInput('');
       }
-
-      if (!token) {
-        throw new Error('Unable to authenticate. Please try refreshing the page.');
-      }
-
-      const res = await fetch('/api/quick-match', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({})
-      });
-
-      if (!res.ok) {
-        const errorBody = await res.json().catch(() => ({}));
-        throw new Error(errorBody.message || `Failed to join queue: ${res.statusText}`);
-      }
-
-      const data = await res.json();
-
-      if (data.data.matchFound && data.data.roomId) {
-        setStatus('matched');
-        toast.success('Match found! Connecting you now...');
-        router.push(`/chat/${data.data.roomId}`);
-      }
-    } catch (err: any) {
-      console.error('Quick Match Error:', err);
-      setStatus('error');
-      setErrorMsg(err.message || 'Something went wrong. Please try again.');
-      toast.error(err.message || 'Something went wrong.');
     }
   };
+
+  const removeInterest = (tagToRemove: string) => {
+    setInterests(interests.filter(tag => tag !== tagToRemove));
+  };
+
+  useEffect(() => {
+    const handleTimeout = () => {
+      if (status === 'searching') {
+        toast.info("No match found for your interests. Broadening search...");
+        handleQuickMatch(true).catch(console.error); // Force global
+      }
+    };
+
+    window.addEventListener('interest_match_timeout', handleTimeout);
+    return () => window.removeEventListener('interest_match_timeout', handleTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   if (!session.userId) {
     return <div className="min-h-screen flex items-center justify-center">
@@ -139,9 +183,55 @@ export default function QuickMatchPage() {
         {/* Main Action Area */}
         <div className="py-12 flex flex-col items-center justify-center min-h-[400px]">
           {status === 'idle' && (
-            <div className="flex flex-col items-center">
-              <Loader2 className="w-12 h-12 text-indigo-400 animate-spin mb-4" />
-              <p className="text-white/50 text-lg">Initializing connection...</p>
+            <div className="flex flex-col items-center w-full max-w-sm mx-auto animate-in fade-in zoom-in duration-500">
+              <div className="w-20 h-20 bg-indigo-500/10 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
+                <Activity className="w-10 h-10 text-indigo-400" />
+              </div>
+
+              <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 mb-6 backdrop-blur-md">
+                <h3 className="text-white font-medium mb-2 flex items-center gap-2">
+                  <Hash className="w-4 h-4 text-indigo-400" />
+                  Match by Interests (Optional)
+                </h3>
+                <p className="text-xs text-white/50 mb-4 text-left">
+                  Connect over shared vibes. Type a tag and press Enter. Leave blank for a random connection.
+                </p>
+
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {interests.map(tag => (
+                    <span key={tag} className="bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full text-xs flex items-center gap-1 border border-indigo-500/30">
+                      {tag}
+                      <button onClick={() => removeInterest(tag)} className="hover:text-white transition-colors"><X className="w-3 h-3" /></button>
+                    </span>
+                  ))}
+                </div>
+
+                <input
+                  type="text"
+                  value={interestInput}
+                  onChange={e => setInterestInput(e.target.value)}
+                  onKeyDown={handleAddInterest}
+                  disabled={interests.length >= 5}
+                  placeholder={interests.length >= 5 ? "Limit reached (5 tags)" : "e.g. movies, gaming, travel..."}
+                  className="w-full bg-obsidian-900 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50"
+                />
+              </div>
+
+              <div className="min-h-[65px] flex items-center justify-center w-full mb-6">
+                <Turnstile
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  options={{ theme: 'dark' }}
+                />
+              </div>
+
+              <Button
+                onClick={() => handleQuickMatch(false)}
+                disabled={!turnstileToken}
+                className="w-full h-12 text-sm uppercase tracking-widest bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 border-none transition-all duration-300 hover:scale-[1.02] shadow-[0_0_20px_rgba(99,102,241,0.3)] disabled:opacity-50 disabled:hover:scale-100"
+              >
+                Initiate Vibe Check
+              </Button>
             </div>
           )}
 

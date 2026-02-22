@@ -3,7 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useToast } from '../../components/ui/toast';
-import { Settings, User, SlidersHorizontal, Shield, Volume2, Eye, Keyboard, Info } from 'lucide-react';
+import { Settings, User, SlidersHorizontal, Shield, Volume2, Eye, Keyboard, Info, LogIn, LogOut } from 'lucide-react';
+import { useSessionStore } from '../../stores/useSessionStore';
+import { supabase } from '../../lib/supabase';
+import AuthModal from '../../components/Profile/AuthModal';
 
 export default function SettingsPage() {
   const toast = useToast();
@@ -13,6 +16,18 @@ export default function SettingsPage() {
     safetyFilter: true,
     soundEffects: false,
   });
+
+  const [showAuth, setShowAuth] = useState(false);
+  const clearSession = useSessionStore((s) => s.clearSession);
+  const [isRealUser, setIsRealUser] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      // If it's not anonymous, they hold a real email account
+      setIsRealUser(!!data.session?.user?.email);
+    });
+  }, []);
 
   useEffect(() => {
     const stored = localStorage.getItem('inkhaven:preferences');
@@ -74,6 +89,33 @@ export default function SettingsPage() {
               </div>
             </Link>
           </div>
+
+          <div className="mt-8 pt-6 border-t border-white/5 space-y-3">
+            {isRealUser ? (
+              <button
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  clearSession();
+                  window.location.href = '/';
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-red-400 hover:bg-red-500/20 transition group"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm font-semibold">Sign Out</span>
+              </button>
+            ) : (
+              <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-4 text-center">
+                <p className="text-xs text-indigo-200/60 mb-3">You are currently using a temporary anonymous session. Register to save your settings and chats.</p>
+                <button
+                  onClick={() => setShowAuth(true)}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-white hover:bg-indigo-500 transition group shadow-lg shadow-indigo-500/20"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span className="text-sm font-semibold">Register / Sign In</span>
+                </button>
+              </div>
+            )}
+          </div>
         </section>
 
         <section className="glass p-6">
@@ -130,12 +172,36 @@ export default function SettingsPage() {
             </div>
 
             <button
-              className="w-full rounded-2xl border border-red-500/10 bg-red-500/5 px-4 py-3 text-left hover:bg-red-500/10 transition group"
-              onClick={() => toast.error('Account deletion not available in demo mode.')}
+              disabled={isDeleting}
+              className="w-full rounded-2xl border border-red-500/10 bg-red-500/5 px-4 py-3 text-left hover:bg-red-500/10 transition group disabled:opacity-50"
+              onClick={async () => {
+                if (window.confirm("Are you absolutely sure you want to permanently delete your account and all associated data? This cannot be undone.")) {
+                  setIsDeleting(true);
+                  try {
+                    const { data: sessionData } = await supabase.auth.getSession();
+                    const token = sessionData?.session?.access_token;
+                    const res = await fetch('/api/auth/delete-account', {
+                      method: 'POST',
+                      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                    });
+                    if (!res.ok) throw new Error("Failed to delete account");
+
+                    toast.success("Account deleted successfully.");
+                    await supabase.auth.signOut();
+                    clearSession();
+                    window.location.href = '/';
+                  } catch (e) {
+                    toast.error("Failed to delete account. Please try again.");
+                    setIsDeleting(false);
+                  }
+                }
+              }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-400">⚠️</div>
+                  <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-400">
+                    {isDeleting ? <span className="animate-spin text-xs">⌛</span> : '⚠️'}
+                  </div>
                   <div>
                     <div className="text-sm font-semibold text-red-400 group-hover:text-red-300 transition">Delete Account</div>
                     <div className="text-xs text-red-400/40">Permanently erase all data</div>
@@ -161,6 +227,8 @@ export default function SettingsPage() {
           </div>
         </section>
       </div>
+
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
     </div>
   );
 }
