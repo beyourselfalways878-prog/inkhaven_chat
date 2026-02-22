@@ -63,34 +63,34 @@ export default function SettingsPage() {
         <section className="card p-6">
           <div className="flex items-center gap-3 mb-2">
             <Settings className="w-6 h-6 text-indigo-400" />
-            <h2 className="text-3xl font-semibold text-white">Settings</h2>
+            <h2 className="text-3xl font-semibold text-slate-900 dark:text-white">Settings</h2>
           </div>
-          <p className="mt-2 text-sm text-white/50">
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Customize your InkHaven experience.
           </p>
 
           <div className="mt-6 space-y-3">
-            <Link href="/profile" className="block rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.06] transition group">
+            <Link href="/profile" className="block rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/[0.03] px-4 py-3 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition group">
               <div className="flex items-center gap-3">
                 <User className="w-5 h-5 text-indigo-400 group-hover:text-indigo-300 transition" />
                 <div>
-                  <div className="font-semibold text-white text-sm">Profile</div>
-                  <div className="text-xs text-white/40">Manage your identity and interests</div>
+                  <div className="font-semibold text-slate-900 dark:text-white text-sm">Profile</div>
+                  <div className="text-xs text-slate-400 dark:text-slate-500">Manage your identity and interests</div>
                 </div>
               </div>
             </Link>
-            <Link href="/onboarding/preferences" className="block rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.06] transition group">
+            <Link href="/onboarding/preferences" className="block rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/[0.03] px-4 py-3 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition group">
               <div className="flex items-center gap-3">
                 <SlidersHorizontal className="w-5 h-5 text-purple-400 group-hover:text-purple-300 transition" />
                 <div>
-                  <div className="font-semibold text-white text-sm">Preferences</div>
-                  <div className="text-xs text-white/40">Privacy and experience controls</div>
+                  <div className="font-semibold text-slate-900 dark:text-white text-sm">Preferences</div>
+                  <div className="text-xs text-slate-400 dark:text-slate-500">Privacy and experience controls</div>
                 </div>
               </div>
             </Link>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-white/5 space-y-3">
+          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/5 space-y-3">
             {isRealUser ? (
               <button
                 onClick={async () => {
@@ -120,7 +120,7 @@ export default function SettingsPage() {
 
         <section className="glass p-6">
           <div className="card p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-white mb-6">Privacy & Experience</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">Privacy & Experience</h3>
 
             {settingsMeta.map((item) => {
               const Icon = item.icon;
@@ -128,18 +128,18 @@ export default function SettingsPage() {
               return (
                 <button
                   key={item.key}
-                  className="w-full rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3 text-left hover:bg-white/[0.06] transition"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/[0.03] px-4 py-3 text-left hover:bg-slate-100 dark:hover:bg-white/[0.06] transition"
                   onClick={() => update(item.key)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Icon className={`w-4 h-4 ${isOn ? 'text-indigo-400' : 'text-white/20'} transition`} />
+                      <Icon className={`w-4 h-4 ${isOn ? 'text-indigo-400' : 'text-slate-300 dark:text-white/20'} transition`} />
                       <div>
-                        <div className="text-sm font-semibold text-white">{item.title}</div>
-                        <div className="text-xs text-white/40">{item.desc}</div>
+                        <div className="text-sm font-semibold text-slate-900 dark:text-white">{item.title}</div>
+                        <div className="text-xs text-slate-400 dark:text-slate-500">{item.desc}</div>
                       </div>
                     </div>
-                    <span className={`h-6 w-10 rounded-full ${isOn ? 'bg-indigo-500' : 'bg-white/10'} relative transition`}>
+                    <span className={`h-6 w-10 rounded-full ${isOn ? 'bg-indigo-500' : 'bg-slate-200 dark:bg-white/10'} relative transition`}>
                       <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${isOn ? 'right-0.5' : 'left-0.5'}`} />
                     </span>
                   </div>
@@ -148,7 +148,7 @@ export default function SettingsPage() {
             })}
 
             <div className="pt-4 pb-2">
-              <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider text-xs">Visual Experience</h3>
+              <h3 className="text-sm font-semibold text-slate-500 dark:text-white/80 uppercase tracking-wider text-xs">Visual Experience</h3>
             </div>
 
             <button
@@ -159,8 +159,8 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 animate-pulse flex items-center justify-center text-xs">✨</div>
                   <div>
-                    <div className="text-sm font-semibold text-white">Resonant Aura</div>
-                    <div className="text-xs text-white/40">Dynamic background reacts to your vibe</div>
+                    <div className="text-sm font-semibold text-slate-900 dark:text-white">Resonant Aura</div>
+                    <div className="text-xs text-slate-400 dark:text-slate-500">Dynamic background reacts to your vibe</div>
                   </div>
                 </div>
                 <div className="text-xs text-indigo-300 font-medium bg-indigo-500/10 px-2 py-1 rounded-full border border-indigo-500/20">Active</div>
@@ -210,12 +210,12 @@ export default function SettingsPage() {
               </div>
             </button>
 
-            <div className="mt-6 pt-6 border-t border-white/5">
+            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/5">
               <div className="flex items-center gap-2 mb-3">
-                <Info className="w-4 h-4 text-white/30" />
-                <h4 className="text-sm font-semibold text-white">About InkHaven</h4>
+                <Info className="w-4 h-4 text-slate-400 dark:text-white/30" />
+                <h4 className="text-sm font-semibold text-slate-900 dark:text-white">About InkHaven</h4>
               </div>
-              <div className="space-y-2 text-xs text-white/40">
+              <div className="space-y-2 text-xs text-slate-400 dark:text-slate-500">
                 <p>Version 1.0.0</p>
                 <p>Built with privacy and safety in mind.</p>
                 <div className="mt-4 flex gap-3">

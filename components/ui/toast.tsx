@@ -93,10 +93,10 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
       `}
         >
             <span className={config.text}>{config.icon}</span>
-            <p className="text-sm text-white/90 flex-1 font-medium">{toast.message}</p>
+            <p className="text-sm text-slate-800 dark:text-white/90 flex-1 font-medium">{toast.message}</p>
             <button
                 onClick={() => onDismiss(toast.id)}
-                className="text-white/40 hover:text-white/80 transition-colors"
+                className="text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/80 transition-colors"
             >
                 <X size={14} />
             </button>

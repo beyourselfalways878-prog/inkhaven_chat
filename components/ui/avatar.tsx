@@ -52,7 +52,7 @@ export function Avatar({
             <div
                 className={`
           ${config.container} rounded-full flex items-center justify-center
-          font-bold text-white shadow-lg ring-2 ring-white/10
+           font-bold text-white shadow-lg ring-2 ring-slate-200 dark:ring-white/10
         `}
                 style={{ background: gradient }}
                 title={displayName || 'Anonymous'}
@@ -63,7 +63,7 @@ export function Avatar({
                 <span
                     className={`
             absolute bottom-0 right-0 ${config.dot} rounded-full
-            ${statusColors[status]} ring-2 ring-slate-900
+             ${statusColors[status]} ring-2 ring-white dark:ring-slate-900
           `}
                 />
             )}

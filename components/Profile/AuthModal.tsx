@@ -63,19 +63,19 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
-                className="absolute inset-0 bg-obsidian-950/80 backdrop-blur-md"
+                className="absolute inset-0 bg-slate-900/60 dark:bg-obsidian-950/80 backdrop-blur-md"
                 onClick={onClose}
             />
 
-            <div className="relative w-full max-w-sm card p-8 border border-white/5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-sm card p-8 border border-slate-200 dark:border-white/5 animate-in fade-in zoom-in-95 duration-200">
                 <div className="text-center mb-6">
                     <div className="mx-auto w-12 h-12 bg-indigo-500/20 rounded-full flex items-center justify-center mb-4">
                         <Fingerprint className="w-6 h-6 text-indigo-400" />
                     </div>
-                    <h2 className="text-xl font-bold text-white">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">
                         {isForgotPassword ? 'Reset Password' : (isLogin ? 'Welcome Back' : 'Claim Your Identity')}
                     </h2>
-                    <p className="text-sm text-white/50 mt-1">
+                    <p className="text-sm text-slate-500 dark:text-white/50 mt-1">
                         {isForgotPassword
                             ? 'Enter your email to receive a password reset link.'
                             : (isLogin
@@ -86,12 +86,12 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
 
                 <form onSubmit={handleAuth} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-medium text-white/70 mb-1">Email</label>
+                        <label className="block text-xs font-medium text-slate-600 dark:text-white/70 mb-1">Email</label>
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+                            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500 transition-colors"
                             placeholder="vibe@inkhaven.in"
                             required
                         />
@@ -99,12 +99,12 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
 
                     {!isForgotPassword && (
                         <div>
-                            <label className="block text-xs font-medium text-white/70 mb-1">Password</label>
+                            <label className="block text-xs font-medium text-slate-600 dark:text-white/70 mb-1">Password</label>
                             <input
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+                                className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500 transition-colors"
                                 placeholder="••••••••"
                                 required
                                 minLength={6}
@@ -160,14 +160,14 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
                     {isForgotPassword ? (
                         <button
                             onClick={() => { setIsForgotPassword(false); setError(''); setSuccessMsg(''); }}
-                            className="text-xs text-white/40 hover:text-white/80 transition-colors"
+                            className="text-xs text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/80 transition-colors"
                         >
                             Remembered your password? Sign in.
                         </button>
                     ) : (
                         <button
                             onClick={() => { setIsLogin(!isLogin); setError(''); setSuccessMsg(''); }}
-                            className="text-xs text-white/40 hover:text-white/80 transition-colors"
+                            className="text-xs text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/80 transition-colors"
                         >
                             {isLogin
                                 ? "Don't have an account? Register instead."

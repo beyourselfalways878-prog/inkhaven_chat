@@ -72,8 +72,8 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 400 }}
                         className={`
-              ${sizeMap[size]} w-full rounded-2xl border border-white/10
-              bg-slate-900/95 backdrop-blur-xl shadow-2xl
+              ${sizeMap[size]} w-full rounded-2xl border border-slate-200 dark:border-white/10
+              bg-white dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl
             `}
                         role="dialog"
                         aria-modal="true"
@@ -81,10 +81,10 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
                     >
                         {title && (
                             <div className="flex items-center justify-between px-6 pt-5 pb-2">
-                                <h2 className="text-lg font-semibold text-white">{title}</h2>
+                                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h2>
                                 <button
                                     onClick={onClose}
-                                    className="text-white/40 hover:text-white/80 transition-colors p-1 rounded-lg hover:bg-white/5"
+                                    className="text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/80 transition-colors p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5"
                                 >
                                     <X size={18} />
                                 </button>

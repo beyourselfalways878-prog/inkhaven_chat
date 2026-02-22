@@ -28,13 +28,13 @@ function QuickReactions({ onSelect, show }: { onSelect: (_emoji: string) => void
           initial={{ opacity: 0, scale: 0.8, y: 5 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 5 }}
-          className="absolute -top-10 left-0 flex items-center gap-0.5 bg-slate-800/95 backdrop-blur-xl border border-white/10 rounded-2xl px-1.5 py-1 shadow-2xl z-10"
+          className="absolute -top-10 left-0 flex items-center gap-0.5 bg-white dark:bg-slate-800/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl px-1.5 py-1 shadow-2xl z-10"
         >
           {QUICK_REACTIONS.map((emoji) => (
             <button
               key={emoji}
               onClick={() => onSelect(emoji)}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-base hover:bg-white/10 transition-all active:scale-90"
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-base hover:bg-slate-100 dark:hover:bg-white/10 transition-all active:scale-90"
             >
               {emoji}
             </button>
@@ -121,7 +121,7 @@ export default function MessageBubble({ message, isMine, onReply, onEdit, onReac
           relative max-w-[75%] break-words rounded-2xl shadow-sm
           ${isMine
             ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-br-md'
-            : 'bg-white/[0.08] text-white/90 border border-white/5 rounded-bl-md'
+            : 'bg-slate-100 dark:bg-white/[0.08] text-slate-900 dark:text-white/90 border border-slate-200 dark:border-white/5 rounded-bl-md'
           }
         `}
       >
@@ -217,7 +217,7 @@ export default function MessageBubble({ message, isMine, onReply, onEdit, onReac
               <textarea
                 value={editText}
                 onChange={(e) => setEditText(e.target.value)}
-                className="w-full bg-white/10 text-sm text-white rounded-lg px-2 py-1.5 outline-none border border-white/10 focus:border-indigo-500/50 resize-none"
+                className="w-full bg-slate-100 dark:bg-white/10 text-sm text-slate-900 dark:text-white rounded-lg px-2 py-1.5 outline-none border border-slate-200 dark:border-white/10 focus:border-indigo-500/50 resize-none"
                 rows={2}
                 autoFocus
                 onKeyDown={(e) => {
@@ -226,7 +226,7 @@ export default function MessageBubble({ message, isMine, onReply, onEdit, onReac
                 }}
               />
               <div className="flex items-center gap-1.5 justify-end">
-                <button onClick={() => { setEditing(false); setEditText(message.content); }} className="text-[10px] text-white/40 hover:text-white/60 px-2 py-0.5">Cancel</button>
+                <button onClick={() => { setEditing(false); setEditText(message.content); }} className="text-[10px] text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/60 px-2 py-0.5">Cancel</button>
                 <button onClick={handleEdit} className="text-[10px] bg-indigo-500/80 hover:bg-indigo-500 text-white px-2 py-0.5 rounded">Save</button>
               </div>
             </div>
@@ -242,9 +242,9 @@ export default function MessageBubble({ message, isMine, onReply, onEdit, onReac
             <span className="opacity-50">{new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             {isMine && message.status && (
               <span className="ml-0.5 flex items-center">
-                {message.status === 'sending' && <Check className="w-3.5 h-3.5 text-white/30" />}
-                {message.status === 'sent' && <Check className="w-3.5 h-3.5 text-white/50" />}
-                {message.status === 'delivered' && <CheckCheck className="w-3.5 h-3.5 text-white/50" />}
+                {message.status === 'sending' && <Check className="w-3.5 h-3.5 text-slate-300 dark:text-white/30" />}
+                {message.status === 'sent' && <Check className="w-3.5 h-3.5 text-slate-400 dark:text-white/50" />}
+                {message.status === 'delivered' && <CheckCheck className="w-3.5 h-3.5 text-slate-400 dark:text-white/50" />}
                 {message.status === 'read' && <CheckCheck className="w-3.5 h-3.5 text-[#4ea8de]" />}
               </span>
             )}
@@ -262,12 +262,12 @@ export default function MessageBubble({ message, isMine, onReply, onEdit, onReac
                   inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs transition-colors
                   ${userReacted
                     ? 'bg-indigo-500/20 border border-indigo-500/30'
-                    : 'bg-white/5 border border-white/5 hover:bg-white/10'
+                    : 'bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 hover:bg-slate-200 dark:hover:bg-white/10'
                   }
                 `}
               >
                 <span>{emoji}</span>
-                <span className="text-[10px] text-white/60">{count}</span>
+                <span className="text-[10px] text-slate-500 dark:text-white/60">{count}</span>
               </button>
             ))}
           </div>
@@ -282,8 +282,8 @@ export default function MessageBubble({ message, isMine, onReply, onEdit, onReac
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             className={`
-              absolute top-0 flex items-center gap-0.5 bg-slate-800/90 backdrop-blur-xl
-              border border-white/10 rounded-xl px-1 py-0.5 shadow-xl z-10
+              absolute top-0 flex items-center gap-0.5 bg-white dark:bg-slate-800/90 backdrop-blur-xl
+              border border-slate-200 dark:border-white/10 rounded-xl px-1 py-0.5 shadow-xl z-10
               ${isMine ? 'right-auto left-0 -translate-x-full mr-1' : 'left-auto right-0 translate-x-full ml-1'}
             `}
             onMouseEnter={handleMouseEnter}
@@ -292,7 +292,7 @@ export default function MessageBubble({ message, isMine, onReply, onEdit, onReac
             {onReact && (
               <button
                 onClick={() => setShowReactions(!showReactions)}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/5 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/80 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
                 title="React"
               >
                 <Smile size={14} />
@@ -301,7 +301,7 @@ export default function MessageBubble({ message, isMine, onReply, onEdit, onReac
             {onReply && (
               <button
                 onClick={handleReply}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/5 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/80 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
                 title="Reply"
               >
                 <Reply size={14} />
@@ -310,7 +310,7 @@ export default function MessageBubble({ message, isMine, onReply, onEdit, onReac
             {isMine && message.messageType !== 'audio' && message.messageType !== 'file' && onEdit && (
               <button
                 onClick={() => { setEditing(true); setEditText(message.content); setShowActions(false); }}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/5 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/80 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
                 title="Edit"
               >
                 <Pencil size={14} />

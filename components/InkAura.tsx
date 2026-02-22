@@ -103,11 +103,11 @@ export function ChemistryMeter({ seed1, seed2, showLabel = true, className = '' 
     return (
         <div className={`flex flex-col items-center gap-2 ${className}`}>
             {showLabel && (
-                <div className="text-xs font-medium text-white/50">
-                    Vibe Chemistry: <span className="text-white/80">{label}</span>
+                <div className="text-xs font-medium text-slate-500 dark:text-white/50">
+                    Vibe Chemistry: <span className="text-slate-700 dark:text-white/80">{label}</span>
                 </div>
             )}
-            <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden">
+            <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-white/5 overflow-hidden">
                 <motion.div
                     className="h-full rounded-full"
                     style={{
@@ -118,7 +118,7 @@ export function ChemistryMeter({ seed1, seed2, showLabel = true, className = '' 
                     transition={{ duration: 1.5, ease: 'easeOut' }}
                 />
             </div>
-            <span className="text-[10px] text-white/40">{score}%</span>
+            <span className="text-[10px] text-slate-400 dark:text-white/40">{score}%</span>
         </div>
     );
 }

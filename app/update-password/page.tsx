@@ -61,31 +61,31 @@ export default function UpdatePasswordPage() {
 
     if (!authChecked) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-obsidian-950">
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-obsidian-950">
                 <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-obsidian-950 p-4">
-            <div className="w-full max-w-md card p-8 border border-white/5 animate-in fade-in zoom-in-95 duration-500">
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-obsidian-950 p-4">
+            <div className="w-full max-w-md card p-8 border border-slate-200 dark:border-white/5 animate-in fade-in zoom-in-95 duration-500">
                 <div className="text-center mb-6">
                     <div className="mx-auto w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mb-4">
                         <KeyRound className="w-6 h-6 text-emerald-400" />
                     </div>
-                    <h2 className="text-2xl font-bold text-white">Reset Password</h2>
-                    <p className="text-sm text-white/50 mt-1">Enter your new secure password below.</p>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Reset Password</h2>
+                    <p className="text-sm text-slate-500 dark:text-white/50 mt-1">Enter your new secure password below.</p>
                 </div>
 
                 <form onSubmit={handleUpdate} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-medium text-white/70 mb-1">New Password</label>
+                        <label className="block text-xs font-medium text-slate-600 dark:text-white/70 mb-1">New Password</label>
                         <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
                             placeholder="••••••••"
                             required
                             minLength={6}
@@ -93,12 +93,12 @@ export default function UpdatePasswordPage() {
                     </div>
 
                     <div>
-                        <label className="block text-xs font-medium text-white/70 mb-1">Confirm New Password</label>
+                        <label className="block text-xs font-medium text-slate-600 dark:text-white/70 mb-1">Confirm New Password</label>
                         <input
                             type="password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
                             placeholder="••••••••"
                             required
                             minLength={6}
@@ -117,7 +117,7 @@ export default function UpdatePasswordPage() {
                         <button
                             type="button"
                             onClick={() => router.push('/')}
-                            className="text-xs text-white/30 hover:text-white/60 transition-colors"
+                            className="text-xs text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/60 transition-colors"
                         >
                             Cancel and return to home
                         </button>

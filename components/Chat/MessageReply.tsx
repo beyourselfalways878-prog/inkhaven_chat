@@ -35,17 +35,17 @@ export function MessageReplyPreview({ replyTo, onCancel }: MessageReplyPreviewPr
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="flex items-center gap-2 px-4 py-2 border-t border-white/5 bg-white/[0.02]"
+            className="flex items-center gap-2 px-4 py-2 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/[0.02]"
         >
             <div className="w-0.5 h-8 rounded-full bg-indigo-500/60 flex-shrink-0" />
             <Reply size={14} className="text-indigo-400 flex-shrink-0" />
             <div className="flex-1 min-w-0">
                 <p className="text-[11px] font-medium text-indigo-400">{displayName}</p>
-                <p className="text-xs text-white/70 truncate">{truncated}</p>
+                <p className="text-xs text-slate-600 dark:text-white/70 truncate">{truncated}</p>
             </div>
             <button
                 onClick={onCancel}
-                className="p-1 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
+                className="p-1 rounded-lg text-slate-300 dark:text-white/30 hover:text-slate-500 dark:hover:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
             >
                 <X size={14} />
             </button>
@@ -74,7 +74,7 @@ export function MessageReplyInline({ replyTo, isMine }: MessageReplyInlineProps)
         flex items-start gap-2 px-3 py-1.5 rounded-lg mb-1.5 cursor-pointer
         ${isMine
                     ? 'bg-white/10 hover:bg-white/15'
-                    : 'bg-white/5 hover:bg-white/10'
+                    : 'bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10'
                 }
         transition-colors
       `}
@@ -84,7 +84,7 @@ export function MessageReplyInline({ replyTo, isMine }: MessageReplyInlineProps)
                 <p className={`text-[10px] font-medium ${isMine ? 'text-white/90' : 'text-indigo-400'}`}>
                     {displayName}
                 </p>
-                <p className={`text-[11px] truncate ${isMine ? 'text-white/80' : 'text-white/70'}`}>{truncated}</p>
+                <p className={`text-[11px] truncate ${isMine ? 'text-white/80' : 'text-slate-600 dark:text-white/70'}`}>{truncated}</p>
             </div>
         </div>
     );

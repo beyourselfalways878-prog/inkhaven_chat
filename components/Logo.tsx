@@ -53,8 +53,8 @@ export const Logo = ({ className = "w-10 h-10", showText = false }: { className?
 
         {showText && (
             <div className="flex flex-col leading-tight">
-                <span className="font-bold text-xl tracking-tight text-white">InkHaven</span>
-                <span className="text-[10px] uppercase tracking-widest text-indigo-200/60 font-medium">Anonymous Sanctuary</span>
+                <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">InkHaven</span>
+                <span className="text-[10px] uppercase tracking-widest text-indigo-600/60 dark:text-indigo-200/60 font-medium">Anonymous Sanctuary</span>
             </div>
         )}
     </div>

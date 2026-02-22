@@ -56,7 +56,7 @@ export default function ProfilePage() {
     return (
       <div className="container mx-auto px-6 py-10">
         <div className="card p-10 text-center">
-          <p className="text-white/60">Please create your profile to continue.</p>
+          <p className="text-slate-500 dark:text-white/60">Please create your profile to continue.</p>
           <button
             onClick={() => router.push('/onboarding')}
             className="btn-primary mt-6"
@@ -89,26 +89,26 @@ export default function ProfilePage() {
                 />
               </div>
             </div>
-            <h2 className="mt-4 text-2xl font-semibold text-white">
+            <h2 className="mt-4 text-2xl font-semibold text-slate-900 dark:text-white">
               {session.displayName || 'Anonymous'}
             </h2>
-            <div className="mt-1 text-sm text-white/40 font-mono">{session.inkId}</div>
+            <div className="mt-1 text-sm text-slate-400 dark:text-white/40 font-mono">{session.inkId}</div>
             <div className="mt-3">
               <KarmaLevel reputation={reputation} />
             </div>
           </div>
 
           <div className="space-y-3">
-            <div className="rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3">
-              <div className="text-xs text-white/40">Comfort Level</div>
-              <div className="text-base font-medium text-white capitalize">
+            <div className="rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/[0.03] px-4 py-3">
+              <div className="text-xs text-slate-400 dark:text-white/40">Comfort Level</div>
+              <div className="text-base font-medium text-slate-900 dark:text-white capitalize">
                 {(session.comfortLevel as string) || 'Not set'}
               </div>
             </div>
 
             {session.interests && session.interests.length > 0 && (
-              <div className="rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3">
-                <div className="text-xs text-white/40 mb-2">Interests</div>
+              <div className="rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/[0.03] px-4 py-3">
+                <div className="text-xs text-slate-400 dark:text-white/40 mb-2">Interests</div>
                 <div className="flex flex-wrap gap-2">
                   {session.interests.map((interest: string) => (
                     <span
@@ -134,7 +134,7 @@ export default function ProfilePage() {
         {isEditing && (
           <section className="glass p-6">
             <div className="card p-6">
-              <h3 className="text-lg font-semibold text-white flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center justify-between">
                 <span>Update Profile</span>
                 {loading && <span className="text-sm text-indigo-400">Saving...</span>}
               </h3>

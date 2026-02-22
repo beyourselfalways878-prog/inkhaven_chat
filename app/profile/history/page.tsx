@@ -149,21 +149,21 @@ export default function HistoryPage() {
     return (
         <div className="container mx-auto px-6 py-10 h-[calc(100vh-80px)]">
             <div className="flex items-center gap-3 mb-6">
-                <Link href="/settings" className="p-2 hover:bg-white/10 rounded-full transition">
-                    <ChevronLeft className="w-5 h-5 text-white" />
+                <Link href="/settings" className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition">
+                    <ChevronLeft className="w-5 h-5 text-slate-900 dark:text-white" />
                 </Link>
-                <h2 className="text-2xl font-semibold text-white">Saved Chats</h2>
+                <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Saved Chats</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[80%]">
                 {/* Sidebar */}
-                <div className="card bg-slate-900/50 border border-white/10 rounded-2xl overflow-hidden flex flex-col">
-                    <div className="p-4 border-b border-white/5 font-semibold text-white/80">
+                <div className="card bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col">
+                    <div className="p-4 border-b border-slate-200 dark:border-white/5 font-semibold text-slate-700 dark:text-white/80">
                         Recent Transcripts
                     </div>
                     <div className="flex-1 overflow-y-auto p-2 space-y-2">
                         {loadingRooms ? (
-                            <div className="text-center text-white/40 text-sm py-10 animate-pulse">Loading...</div>
+                            <div className="text-center text-slate-400 dark:text-white/40 text-sm py-10 animate-pulse">Loading...</div>
                         ) : rooms.length === 0 ? (
                             <div className="text-center flex flex-col items-center justify-center h-40 opacity-50">
                                 <CloudOff className="w-8 h-8 mb-2" />
@@ -174,13 +174,13 @@ export default function HistoryPage() {
                                 <button
                                     key={room.id}
                                     onClick={() => setSelectedRoomId(room.id)}
-                                    className={`w-full text-left p-3 rounded-xl transition ${selectedRoomId === room.id ? 'bg-indigo-500/20 border border-indigo-500/30' : 'hover:bg-white/5 border border-transparent'}`}
+                                    className={`w-full text-left p-3 rounded-xl transition ${selectedRoomId === room.id ? 'bg-indigo-500/20 border border-indigo-500/30' : 'hover:bg-slate-50 dark:hover:bg-white/5 border border-transparent'}`}
                                 >
                                     <div className="flex items-center gap-2">
                                         <MessageSquare className="w-4 h-4 text-indigo-400" />
-                                        <span className="text-sm text-white font-medium">Stranger</span>
+                                        <span className="text-sm text-slate-900 dark:text-white font-medium">Stranger</span>
                                     </div>
-                                    <div className="text-xs text-white/40 mt-1 flex items-center gap-1">
+                                    <div className="text-xs text-slate-400 dark:text-white/40 mt-1 flex items-center gap-1">
                                         <Clock className="w-3 h-3" />
                                         {new Date(room.createdAt).toLocaleDateString()}
                                     </div>
@@ -191,11 +191,11 @@ export default function HistoryPage() {
                 </div>
 
                 {/* Message View */}
-                <div className="md:col-span-2 card bg-slate-900/80 border border-white/10 rounded-2xl overflow-hidden flex flex-col">
+                <div className="md:col-span-2 card bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col">
                     {selectedRoomId ? (
                         <>
-                            <div className="p-4 border-b border-white/5 flex justify-between items-center bg-slate-900 absolute w-full z-10">
-                                <span className="text-white/80 font-medium text-sm">Room: {selectedRoomId.substring(0, 8)}...</span>
+                            <div className="p-4 border-b border-slate-200 dark:border-white/5 flex justify-between items-center bg-white dark:bg-slate-900 absolute w-full z-10">
+                                <span className="text-slate-700 dark:text-white/80 font-medium text-sm">Room: {selectedRoomId.substring(0, 8)}...</span>
                                 <button onClick={exportChat} className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5 hover:bg-indigo-500/20 hover:text-indigo-300">
                                     <Download className="w-3.5 h-3.5" />
                                     Export to TXT
@@ -231,10 +231,10 @@ export default function HistoryPage() {
                                         const isMine = m.senderId === session.userId;
                                         return (
                                             <div key={m.id} className={`flex flex-col ${isMine ? 'items-end' : 'items-start'} max-w-[80%] ${isMine ? 'ml-auto' : 'mr-auto'}`}>
-                                                <div className={`p-3 rounded-2xl text-sm ${isMine ? 'bg-indigo-600/90 text-white rounded-tr-sm' : 'bg-slate-800 text-white rounded-tl-sm border border-white/5'}`}>
+                                                <div className={`p-3 rounded-2xl text-sm ${isMine ? 'bg-indigo-600/90 text-white rounded-tr-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-tl-sm border border-slate-200 dark:border-white/5'}`}>
                                                     {m.messageType === 'text' ? m.content : <span className="italic opacity-60 text-xs">Media attachment ({m.messageType})</span>}
                                                 </div>
-                                                <span className="text-[10px] text-white/30 mt-1">{new Date(m.createdAt).toLocaleTimeString()}</span>
+                                                <span className="text-[10px] text-slate-400 dark:text-white/30 mt-1">{new Date(m.createdAt).toLocaleTimeString()}</span>
                                             </div>
                                         )
                                     });
@@ -244,11 +244,11 @@ export default function HistoryPage() {
                                 <div ref={observerTarget} className="h-4 w-full flex-shrink-0" />
 
                                 {loadingMessages && <div className="text-center text-xs text-indigo-400 py-2 animate-pulse w-full flex-shrink-0">Loading more...</div>}
-                                {!hasMore && messages.length > 0 && <div className="text-center text-xs text-white/20 py-2 w-full flex-shrink-0">Beginning of history</div>}
+                                {!hasMore && messages.length > 0 && <div className="text-center text-xs text-slate-300 dark:text-white/20 py-2 w-full flex-shrink-0">Beginning of history</div>}
                             </div>
                         </>
                     ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center text-white/30">
+                        <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-white/30">
                             <MessageSquare className="w-12 h-12 mb-3 opacity-20" />
                             <p>Select a chat from the left to view history.</p>
                         </div>
