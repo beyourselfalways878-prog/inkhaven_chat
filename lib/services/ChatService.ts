@@ -1,6 +1,14 @@
 /**
  * Chat Service
  * Business logic for chat operations
+ *
+ * SCHEMA ALIGNMENT: Uses only columns that exist in public.messages:
+ *   id, room_id, sender_id, content, message_type, reply_to,
+ *   metadata (JSONB), is_reported, is_deleted, moderation_status,
+ *   created_at, updated_at
+ *
+ * Audio/file data is stored inside the `metadata` JSONB column.
+ * Read receipts use the `message_statuses` table.
  */
 
 import { supabaseAdmin } from '../supabaseAdmin';
@@ -23,15 +31,10 @@ export class ChatService {
         try {
             logger.info('Sending text message', { roomId, senderId, contentLength: content.length });
 
-            // Validate input
             const validated = sendTextMessageSchema.parse({
-                roomId,
-                senderId,
-                content,
-                messageType: 'text'
+                roomId, senderId, content, messageType: 'text'
             });
 
-            // Insert message
             const { data, error } = await supabaseAdmin
                 .from('messages')
                 .insert({
@@ -39,7 +42,7 @@ export class ChatService {
                     sender_id: validated.senderId,
                     content: validated.content,
                     message_type: 'text',
-                    status: 'sent'
+                    metadata: {}
                 })
                 .select()
                 .single();
@@ -47,13 +50,17 @@ export class ChatService {
             if (error) {
                 throw new ChatError('Failed to send message', { originalError: error.message });
             }
-
             if (!data) {
                 throw new ChatError('Message was not created');
             }
 
-            logger.info('Text message sent successfully', { messageId: data.id });
+            // Update room last_message_at
+            await supabaseAdmin
+                .from('rooms')
+                .update({ last_message_at: new Date().toISOString() })
+                .eq('id', validated.roomId);
 
+            logger.info('Text message sent successfully', { messageId: data.id });
             return this.mapDatabaseMessageToMessage(data);
         } catch (error) {
             logger.error('Failed to send text message', { roomId, senderId, error });
@@ -62,7 +69,7 @@ export class ChatService {
     }
 
     /**
-     * Send an audio message
+     * Send an audio message (metadata stored in JSONB)
      */
     async sendAudioMessage(
         roomId: string,
@@ -73,26 +80,21 @@ export class ChatService {
         try {
             logger.info('Sending audio message', { roomId, senderId, audioDuration });
 
-            // Validate input
             const validated = sendAudioMessageSchema.parse({
-                roomId,
-                senderId,
-                audioUrl,
-                audioDuration,
-                messageType: 'audio'
+                roomId, senderId, audioUrl, audioDuration, messageType: 'audio'
             });
 
-            // Insert message
             const { data, error } = await supabaseAdmin
                 .from('messages')
                 .insert({
                     room_id: validated.roomId,
                     sender_id: validated.senderId,
-                    content: validated.audioUrl,
+                    content: '[Audio Message]',
                     message_type: 'audio',
-                    audio_url: validated.audioUrl,
-                    audio_duration: validated.audioDuration,
-                    status: 'sent'
+                    metadata: {
+                        audioUrl: validated.audioUrl,
+                        audioDuration: validated.audioDuration
+                    }
                 })
                 .select()
                 .single();
@@ -100,13 +102,16 @@ export class ChatService {
             if (error) {
                 throw new ChatError('Failed to send audio message', { originalError: error.message });
             }
-
             if (!data) {
                 throw new ChatError('Audio message was not created');
             }
 
-            logger.info('Audio message sent successfully', { messageId: data.id });
+            await supabaseAdmin
+                .from('rooms')
+                .update({ last_message_at: new Date().toISOString() })
+                .eq('id', validated.roomId);
 
+            logger.info('Audio message sent successfully', { messageId: data.id });
             return this.mapDatabaseMessageToMessage(data);
         } catch (error) {
             logger.error('Failed to send audio message', { roomId, senderId, error });
@@ -115,7 +120,7 @@ export class ChatService {
     }
 
     /**
-     * Send a file message
+     * Send a file message (metadata stored in JSONB)
      */
     async sendFileMessage(
         roomId: string,
@@ -128,18 +133,10 @@ export class ChatService {
         try {
             logger.info('Sending file message', { roomId, senderId, fileName, fileSize });
 
-            // Validate input
             const validated = sendFileMessageSchema.parse({
-                roomId,
-                senderId,
-                fileUrl,
-                fileName,
-                fileSize,
-                fileMimeType,
-                messageType: 'file'
+                roomId, senderId, fileUrl, fileName, fileSize, fileMimeType, messageType: 'file'
             });
 
-            // Insert message
             const { data, error } = await supabaseAdmin
                 .from('messages')
                 .insert({
@@ -147,11 +144,12 @@ export class ChatService {
                     sender_id: validated.senderId,
                     content: validated.fileName,
                     message_type: 'file',
-                    file_url: validated.fileUrl,
-                    file_name: validated.fileName,
-                    file_size: validated.fileSize,
-                    file_mime_type: validated.fileMimeType,
-                    status: 'sent'
+                    metadata: {
+                        fileUrl: validated.fileUrl,
+                        fileName: validated.fileName,
+                        fileSize: validated.fileSize,
+                        fileMimeType: validated.fileMimeType
+                    }
                 })
                 .select()
                 .single();
@@ -159,13 +157,16 @@ export class ChatService {
             if (error) {
                 throw new ChatError('Failed to send file message', { originalError: error.message });
             }
-
             if (!data) {
                 throw new ChatError('File message was not created');
             }
 
-            logger.info('File message sent successfully', { messageId: data.id });
+            await supabaseAdmin
+                .from('rooms')
+                .update({ last_message_at: new Date().toISOString() })
+                .eq('id', validated.roomId);
 
+            logger.info('File message sent successfully', { messageId: data.id });
             return this.mapDatabaseMessageToMessage(data);
         } catch (error) {
             logger.error('Failed to send file message', { roomId, senderId, error });
@@ -184,6 +185,7 @@ export class ChatService {
                 .from('messages')
                 .select('*')
                 .eq('room_id', roomId)
+                .eq('is_deleted', false)
                 .order('created_at', { ascending: true })
                 .range(offset, offset + limit - 1);
 
@@ -199,40 +201,45 @@ export class ChatService {
     }
 
     /**
-     * Mark message as read
+     * Mark message as read — uses the message_statuses table
      */
     async markMessageAsRead(messageId: string, userId: string): Promise<void> {
         try {
             logger.info('Marking message as read', { messageId, userId });
 
             const { error } = await supabaseAdmin
-                .from('messages')
-                .update({ status: 'read', read_at: new Date().toISOString() })
-                .eq('id', messageId);
+                .from('message_statuses')
+                .upsert({
+                    message_id: parseInt(messageId.replace('msg_', ''), 10),
+                    user_id: userId,
+                    status: 'read',
+                    created_at: new Date().toISOString()
+                }, { onConflict: 'message_id,user_id,status' });
 
             if (error) {
-                throw new ChatError('Failed to mark message as read', { originalError: error.message });
+                logger.warn('Failed to mark message as read', { messageId, error: error.message });
             }
 
             logger.info('Message marked as read', { messageId });
         } catch (error) {
             logger.error('Failed to mark message as read', { messageId, error });
-            throw error;
         }
     }
 
     /**
-     * Delete a message
+     * Soft-delete a message (sets is_deleted = true)
      */
     async deleteMessage(messageId: string, userId: string): Promise<void> {
         try {
             logger.info('Deleting message', { messageId, userId });
 
+            const numericId = parseInt(messageId.replace('msg_', ''), 10);
+
             // Verify ownership
             const { data: message, error: fetchError } = await supabaseAdmin
                 .from('messages')
                 .select('sender_id')
-                .eq('id', messageId)
+                .eq('id', numericId)
                 .single();
 
             if (fetchError || !message) {
@@ -243,17 +250,17 @@ export class ChatService {
                 throw new ValidationError('You can only delete your own messages');
             }
 
-            // Delete message
+            // Soft-delete
             const { error } = await supabaseAdmin
                 .from('messages')
-                .delete()
-                .eq('id', messageId);
+                .update({ is_deleted: true, updated_at: new Date().toISOString() })
+                .eq('id', numericId);
 
             if (error) {
                 throw new ChatError('Failed to delete message', { originalError: error.message });
             }
 
-            logger.info('Message deleted successfully', { messageId });
+            logger.info('Message soft-deleted successfully', { messageId });
         } catch (error) {
             logger.error('Failed to delete message', { messageId, error });
             throw error;
@@ -261,26 +268,28 @@ export class ChatService {
     }
 
     /**
-     * Map database message to domain message
+     * Map database message to domain message.
+     * Audio/file fields are read from the metadata JSONB column.
      */
     private mapDatabaseMessageToMessage(dbMessage: any): ChatMessage {
+        const meta = dbMessage.metadata || {};
         return {
             id: `msg_${dbMessage.id}`,
             roomId: dbMessage.room_id,
             senderId: dbMessage.sender_id,
             content: dbMessage.content,
             messageType: dbMessage.message_type as MessageType,
-            status: dbMessage.status,
-            readAt: dbMessage.read_at,
+            status: dbMessage.moderation_status === 'clean' ? 'sent' : dbMessage.moderation_status,
+            readAt: null,
             createdAt: dbMessage.created_at,
             updatedAt: dbMessage.updated_at,
             metadata: {
-                fileName: dbMessage.file_name,
-                fileSize: dbMessage.file_size,
-                fileMimeType: dbMessage.file_mime_type,
-                fileUrl: dbMessage.file_url,
-                audioDuration: dbMessage.audio_duration,
-                audioUrl: dbMessage.audio_url
+                fileName: meta.fileName,
+                fileSize: meta.fileSize,
+                fileMimeType: meta.fileMimeType,
+                fileUrl: meta.fileUrl,
+                audioDuration: meta.audioDuration,
+                audioUrl: meta.audioUrl
             }
         };
     }

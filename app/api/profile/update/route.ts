@@ -1,6 +1,6 @@
 /**
  * POST /api/profile/update
- * Update user profile
+ * Update user profile (authenticated — users can only update their own)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -9,12 +9,17 @@ import { handleApiError, generateRequestId } from '../../../../lib/middleware/er
 import { updateProfileSchema } from '../../../../lib/schemas';
 import { logger } from '../../../../lib/logger/Logger';
 import { rateLimit } from '../../../../lib/rateLimit';
+import { getAuthenticatedUser } from '../../../../lib/auth';
+import { AppError } from '../../../../lib/errors/AppError';
 
 export async function POST(req: NextRequest) {
   const requestId = generateRequestId();
 
   try {
     logger.info('POST /api/profile/update', { requestId });
+
+    // Authenticate
+    const user = await getAuthenticatedUser(req);
 
     // Rate limiting
     const ip = req.headers.get('x-forwarded-for') ?? 'local';
@@ -35,6 +40,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const validated = updateProfileSchema.parse(body);
 
+    // Authorization: users can only update their own profile
+    if (validated.userId !== user.id) {
+      throw new AppError('FORBIDDEN', 'You can only update your own profile', 403);
+    }
+
     const profile = await profileService.updateProfile(validated.userId, validated);
 
     logger.info('Profile updated successfully', { requestId, userId: validated.userId });
@@ -51,3 +61,4 @@ export async function POST(req: NextRequest) {
     return handleApiError(error, requestId);
   }
 }
+

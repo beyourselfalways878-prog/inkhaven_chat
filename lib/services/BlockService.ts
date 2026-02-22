@@ -21,7 +21,8 @@ export class BlockService {
     /**
      * Block a user
      */
-    async blockUser(blockerId: string, blockedId: string, reason?: string): Promise<UserBlock> {
+    // eslint-disable-next-line no-unused-vars
+    async blockUser(blockerId: string, blockedId: string, _reason?: string): Promise<UserBlock> {
         try {
             logger.info('Blocking user', { blockerId, blockedId });
 
@@ -34,7 +35,6 @@ export class BlockService {
                 .upsert({
                     blocker_id: blockerId,
                     blocked_id: blockedId,
-                    reason: reason || null,
                     created_at: new Date().toISOString()
                 })
                 .select()
@@ -50,7 +50,6 @@ export class BlockService {
                 id: data.id,
                 blockerId: data.blocker_id,
                 blockedId: data.blocked_id,
-                reason: data.reason,
                 createdAt: data.created_at
             };
         } catch (error) {
@@ -121,7 +120,6 @@ export class BlockService {
                 id: row.id,
                 blockerId: row.blocker_id,
                 blockedId: row.blocked_id,
-                reason: row.reason,
                 createdAt: row.created_at
             }));
         } catch (error) {

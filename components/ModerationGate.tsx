@@ -27,6 +27,8 @@ export function setModerationMode(mode: ModerationMode): void {
     if (typeof window === 'undefined') return;
     localStorage.setItem(STORAGE_KEY, mode);
     localStorage.setItem(CONSENT_KEY, 'true');
+    // Also set a cookie so the server middleware can verify consent
+    document.cookie = `inkhaven_moderation=${mode}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
 }
 
 export default function ModerationGate({ children }: ModerationGateProps) {

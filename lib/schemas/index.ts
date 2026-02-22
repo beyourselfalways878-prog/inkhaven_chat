@@ -116,7 +116,7 @@ export type FindMatchInput = z.infer<typeof findMatchSchema>;
 // Moderation Schemas
 // ============================================================================
 
-export const reportReasonSchema = z.enum(['spam', 'harassment', 'inappropriate', 'other']);
+export const reportReasonSchema = z.enum(['spam', 'harassment', 'inappropriate', 'underage', 'other']);
 
 export const reportMessageSchema = z.object({
     messageId: uuidSchema,

@@ -17,11 +17,20 @@ const nextConfig = {
   },
 
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === 'production'
+      ? { exclude: ['warn', 'error'] }
+      : false,
   },
 
   images: {
-    domains: ['localhost', 'www.inkhaven.in', 'jsyvnlhntumlpydaifex.supabase.co', 'cdn.buymeacoffee.com'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'localhost' },
+      { protocol: 'https', hostname: 'www.inkhaven.in' },
+      { protocol: 'https', hostname: 'jsyvnlhntumlpydaifex.supabase.co' },
+      { protocol: 'https', hostname: 'cdn.buymeacoffee.com' },
+      { protocol: 'https', hostname: '**.supabase.co' },
+      { protocol: 'https', hostname: '**.supabase.in' },
+    ],
     formats: ['image/webp', 'image/avif'],
   },
 

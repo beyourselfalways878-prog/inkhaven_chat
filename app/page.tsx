@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Button } from '../components/ui/button';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Shield, Target, Lock, Zap, Palette, Mic } from 'lucide-react';
 
 const FloatingOrb = ({ delay, size, color, position }: { delay: number; size: string; color: string; position: string }) => (
@@ -55,6 +55,26 @@ const FeatureIcon = ({ gradient, children }: { gradient: string; children: React
 
 export default function Page() {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [stats, setStats] = useState({ usersConnected: 0, safePercentage: 99 });
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await fetch('/api/stats');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.ok && json.data) {
+          setStats({
+            usersConnected: json.data.usersConnected || 0,
+            safePercentage: json.data.safePercentage || 99,
+          });
+        }
+      }
+    } catch {
+      // Keep defaults on error
+    }
+  }, []);
+
+  useEffect(() => { fetchStats(); }, [fetchStats]);
 
   const testimonials = [
     { text: "I feel like I can finally be myself without judgment.", author: "Ink_7f2a", mood: "🌙" },
@@ -124,13 +144,13 @@ export default function Page() {
           <div className="flex flex-wrap justify-center gap-8 text-center">
             <div className="px-6">
               <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                <AnimatedCounter end={12847} suffix="+" />
+                <AnimatedCounter end={stats.usersConnected} suffix="+" />
               </div>
               <div className="text-sm text-slate-500">Users Connected</div>
             </div>
             <div className="px-6 border-l border-r border-slate-200 dark:border-slate-700">
               <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                <AnimatedCounter end={98} suffix="%" />
+                <AnimatedCounter end={stats.safePercentage} suffix="%" />
               </div>
               <div className="text-sm text-slate-500">Safe Conversations</div>
             </div>

@@ -64,11 +64,8 @@ export class MatchingService {
                 .eq('id', validated.userId)
                 .single();
 
-            // Get user interests with weights
-            const { data: interests } = await supabaseAdmin
-                .from('user_interests')
-                .select('interest, weight')
-                .eq('user_id', validated.userId);
+            // Interests are stored directly on the profiles table
+            const interests = (profile?.interests || []).map((i: string) => ({ interest: i, weight: 1 }));
 
             // Calculate vibe score based on match history
             const vibeScore = await this.calculateVibeScore(validated.userId);
@@ -80,7 +77,7 @@ export class MatchingService {
                 .upsert({
                     user_id: validated.userId,
                     mode: queueMode,
-                    interests: (interests || []).map(i => i.interest),
+                    interests: (interests || []).map((i: { interest: string; weight: number }) => i.interest),
                     comfort_level: profile?.comfort_level || 'balanced',
                     mood: queueMode,
                     vibe_score: vibeScore,
@@ -109,7 +106,7 @@ export class MatchingService {
         try {
             const { data: history } = await supabaseAdmin
                 .from('match_history')
-                .select('action, conversation_duration, messages_exchanged')
+                .select('feedback, duration_seconds, messages_exchanged')
                 .eq('user_id', userId)
                 .order('created_at', { ascending: false })
                 .limit(20);
@@ -121,13 +118,13 @@ export class MatchingService {
             let score = 50;
 
             for (const match of history) {
-                switch (match.action) {
+                switch (match.feedback) {
                     case 'liked':
                         score += 5;
                         break;
-                    case 'matched':
-                        // Bonus for longer conversations
-                        if (match.conversation_duration > 300) score += 3; // 5+ min
+                    case null:
+                        // No feedback yet — neutral, bonus for longer conversations
+                        if (match.duration_seconds > 300) score += 3; // 5+ min
                         if (match.messages_exchanged > 10) score += 2;
                         break;
                     case 'skipped':
@@ -279,9 +276,9 @@ export class MatchingService {
     /**
      * Find matches using vector similarity from database
      */
+    // eslint-disable-next-line no-unused-vars
     private async findVectorMatches(userId: string, mode: string): Promise<MatchCandidate[]> {
         try {
-            // Call the database function for vector matching
             const { data, error } = await supabaseAdmin
                 .rpc('find_best_vector_match', {
                     p_user_id: userId,
@@ -290,7 +287,7 @@ export class MatchingService {
                 });
 
             if (error) {
-                logger.warn('Vector matching failed, will use fallback', { error });
+                logger.warn('Vector matching failed, will use fallback', { error: error.message });
                 return [];
             }
 
@@ -351,14 +348,12 @@ export class MatchingService {
                         user_id: userId,
                         partner_id: partnerId,
                         room_id: roomId,
-                        action: 'matched',
                         compatibility_score: compatibilityScore
                     },
                     {
                         user_id: partnerId,
                         partner_id: userId,
                         room_id: roomId,
-                        action: 'matched',
                         compatibility_score: compatibilityScore
                     }
                 ]);
@@ -387,8 +382,8 @@ export class MatchingService {
                     user_id: userId,
                     partner_id: partnerId,
                     room_id: roomId,
-                    action,
-                    conversation_duration: conversationDuration || 0,
+                    feedback: action,
+                    duration_seconds: conversationDuration || 0,
                     messages_exchanged: messagesExchanged || 0
                 });
 
@@ -474,7 +469,7 @@ export class MatchingService {
                 .from('match_history')
                 .select('action, compatibility_score')
                 .eq('user_id', userId)
-                .eq('action', 'matched');
+                .is('feedback', null);  // Rows without feedback are initial matches
 
             if (!history || history.length === 0) {
                 return {

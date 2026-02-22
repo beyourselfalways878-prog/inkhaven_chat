@@ -12,27 +12,24 @@ import { rateLimit } from '../../../lib/rateLimit';
 import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 import { z } from 'zod';
 
+// Admin user IDs from environment variable (comma-separated UUIDs)
+const ADMIN_USER_IDS = (process.env.ADMIN_USER_IDS || '').split(',').filter(Boolean);
+
 async function verifyAdminAuth(req: Request): Promise<boolean> {
     const token = req.headers.get('authorization')?.split(' ')[1];
     if (!token) return false;
 
     try {
-        const { data: { user }, error } = await supabaseAdmin.auth.admin.getUserById(token);
+        // Use getUser with JWT token (not getUserById which expects UUID)
+        const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
         if (error || !user) return false;
 
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', user.id)
-            .single();
-
-        return profile?.is_admin === true;
+        // Check against admin user list from env
+        return ADMIN_USER_IDS.includes(user.id);
     } catch {
         return false;
     }
 }
-
-
 
 const banSchema = z.object({
     userId: z.string().min(1),
@@ -41,7 +38,7 @@ const banSchema = z.object({
 
 const resolveSchema = z.object({
     reportId: z.string().min(1),
-    resolution: z.enum(['dismissed', 'warned', 'banned'])
+    resolution: z.enum(['dismissed', 'actioned'])
 });
 
 export async function GET(req: Request) {
@@ -51,7 +48,7 @@ export async function GET(req: Request) {
         }
 
         const { data, error } = await supabaseAdmin
-            .from('message_reports')
+            .from('user_reports')
             .select('*')
             .order('created_at', { ascending: false })
             .limit(200);
@@ -70,21 +67,20 @@ export async function POST(req: NextRequest) {
     try {
         const ip = req.headers.get('x-forwarded-for') ?? 'local';
         const body = await req.json();
-        const action = body.action || 'check'; // Modified action parsing
+        const action = body.action || 'check';
 
-        logger.info(`POST /api/moderation`, { action, requestId }); // Modified log message
+        logger.info(`POST /api/moderation`, { action, requestId });
 
-        // Rate limiting (strict for moderation endpoint to prevent abuse)
-        const limit = await rateLimit(`moderation:${ip}`, 50, 60); // New general rate limit
+        // Rate limiting
+        const limit = await rateLimit(`moderation:${ip}`, 50, 60);
         if (!limit.allowed) {
             return NextResponse.json({ ok: false, error: 'RATE_LIMITED' }, { status: 429 });
         }
 
         // Check content moderation
         if (action === 'check') {
-            // Original rate limit for 'check' action removed as per user's implied change
             const validated = checkModerationSchema.parse(body);
-            const mode = body.mode || 'safe'; // 'safe' or 'adult'
+            const mode = body.mode || 'safe';
             const result = await moderationService.checkContent(validated.text, mode);
 
             logger.info('Content moderation check completed', { requestId, flagged: result.flagged });
@@ -93,8 +89,8 @@ export async function POST(req: NextRequest) {
 
         // Report a message
         if (action === 'report') {
-            const limit = await rateLimit(`moderation:report:${ip}`, 10, 60);
-            if (!limit.allowed) {
+            const reportLimit = await rateLimit(`moderation:report:${ip}`, 10, 60);
+            if (!reportLimit.allowed) {
                 return NextResponse.json({ ok: false, error: 'RATE_LIMITED' }, { status: 429 });
             }
 
@@ -117,12 +113,11 @@ export async function POST(req: NextRequest) {
             }
 
             const validated = banSchema.parse(body);
-            const { error } = await supabaseAdmin
-                .from('banned_users')
-                .upsert({ user_id: validated.userId, reason: validated.reason ?? 'moderation' });
-
-            if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-            return NextResponse.json({ ok: true });
+            const ban = await moderationService.banUser(
+                validated.userId,
+                validated.reason ?? 'moderation'
+            );
+            return NextResponse.json({ ok: true, data: ban });
         }
 
         // Resolve report (admin only)
@@ -132,13 +127,11 @@ export async function POST(req: NextRequest) {
             }
 
             const validated = resolveSchema.parse(body);
-            const { error } = await supabaseAdmin
-                .from('message_reports')
-                .update({ status: validated.resolution, resolved_at: new Date().toISOString() })
-                .eq('id', validated.reportId);
-
-            if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-            return NextResponse.json({ ok: true });
+            const resolved = await moderationService.resolveReport(
+                validated.reportId,
+                validated.resolution
+            );
+            return NextResponse.json({ ok: true, data: resolved });
         }
 
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

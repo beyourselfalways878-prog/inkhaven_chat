@@ -141,11 +141,6 @@ export class ProfileService {
                 throw new ValidationError('Failed to update profile');
             }
 
-            // Update interests if provided
-            if (validated.interests !== undefined) {
-                await this.updateInterests(userId, validated.interests);
-            }
-
             // Update embeddings if display name or interests changed
             if (validated.displayName !== undefined || validated.interests !== undefined) {
                 await this.updateEmbeddings(userId, validated.displayName, validated.interests);
@@ -160,37 +155,6 @@ export class ProfileService {
         }
     }
 
-    /**
-     * Update user interests
-     */
-    private async updateInterests(userId: string, interests: string[]): Promise<void> {
-        try {
-            // Delete existing interests
-            await supabaseAdmin
-                .from('user_interests')
-                .delete()
-                .eq('user_id', userId);
-
-            // Insert new interests
-            if (interests.length > 0) {
-                const rows = interests.map(interest => ({
-                    user_id: userId,
-                    interest,
-                    weight: 1
-                }));
-
-                const { error } = await supabaseAdmin
-                    .from('user_interests')
-                    .insert(rows);
-
-                if (error) {
-                    logger.warn('Failed to update interests', { userId, error });
-                }
-            }
-        } catch (error) {
-            logger.error('Failed to update interests', { userId, error });
-        }
-    }
 
     /**
      * Update user embeddings for ML-based matching

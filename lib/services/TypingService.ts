@@ -1,9 +1,12 @@
 /**
  * Typing Service
- * Manages typing indicators using database-backed state
+ * Manages typing indicators
+ *
+ * SCHEMA NOTE: The RPCs 'set_typing' and 'get_typing_users' do not exist in the
+ * database. Typing indicators should use Supabase Realtime broadcast on the client-side.
+ * This service now provides a no-op server implementation for API compatibility.
  */
 
-import { supabaseAdmin } from '../supabaseAdmin';
 import { createLogger } from '../logger/Logger';
 
 const logger = createLogger('TypingService');
@@ -15,50 +18,24 @@ export interface TypingUser {
 
 export class TypingService {
     /**
-     * Set typing status for a user in a room
+     * Set typing status — no-op on server.
+     * Typing indicators should be handled via Supabase Realtime broadcast on the client.
      */
     async setTyping(roomId: string, userId: string, isTyping: boolean): Promise<void> {
-        try {
-            const { error } = await supabaseAdmin.rpc('set_typing', {
-                p_room_id: roomId,
-                p_user_id: userId,
-                p_is_typing: isTyping
-            });
-
-            if (error) {
-                logger.warn('Failed to set typing status', { roomId, userId, error });
-            }
-        } catch (error) {
-            logger.error('Failed to set typing status', { roomId, userId, error });
-        }
+        // No-op: typing is handled client-side via Supabase Realtime broadcast
+        logger.info('Typing status (client-side only)', { roomId, userId, isTyping });
     }
 
     /**
-     * Get all users currently typing in a room
+     * Get typing users — returns empty (handled client-side)
      */
-    async getTypingUsers(roomId: string): Promise<TypingUser[]> {
-        try {
-            const { data, error } = await supabaseAdmin.rpc('get_typing_users', {
-                p_room_id: roomId
-            });
-
-            if (error) {
-                logger.warn('Failed to get typing users', { roomId, error });
-                return [];
-            }
-
-            return (data || []).map((u: any) => ({
-                userId: u.user_id,
-                displayName: u.display_name
-            }));
-        } catch (error) {
-            logger.error('Failed to get typing users', { roomId, error });
-            return [];
-        }
+    // eslint-disable-next-line no-unused-vars
+    async getTypingUsers(_roomId: string): Promise<TypingUser[]> {
+        return [];
     }
 
     /**
-     * Clear typing status for a user (when they send a message)
+     * Clear typing status
      */
     async clearTyping(roomId: string, userId: string): Promise<void> {
         await this.setTyping(roomId, userId, false);

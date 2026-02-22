@@ -6,7 +6,7 @@
 export type MessageType = 'text' | 'audio' | 'file';
 export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read';
 export type ComfortLevel = 'gentle' | 'balanced' | 'bold';
-export type MatchMode = 'casual' | 'deep' | 'support';
+export type MatchMode = 'casual' | 'deep';
 
 /**
  * User Profile

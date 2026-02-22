@@ -1,24 +1,27 @@
 /**
  * Consolidated Messages API
- * GET: Fetch messages from a room
- * POST: Send a message (text, audio, or file)
+ * GET: Fetch messages from a room (authenticated, participant-only)
+ * POST: Send a message (text, audio, or file) with moderation check
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { chatService } from '../../../lib/services/ChatService';
+import { moderationService } from '../../../lib/services/ModerationService';
 import { handleApiError, generateRequestId } from '../../../lib/middleware/errorHandler';
 import { sendMessageSchema, paginationSchema } from '../../../lib/schemas';
 import { logger } from '../../../lib/logger/Logger';
-import { ValidationError } from '../../../lib/errors/AppError';
-
+import { ValidationError, AppError } from '../../../lib/errors/AppError';
 import { getAuthenticatedUser } from '../../../lib/auth';
-import { AppError } from '../../../lib/errors/AppError';
+import { supabaseAdmin } from '../../../lib/supabaseAdmin';
 
 export async function GET(req: NextRequest) {
     const requestId = generateRequestId();
 
     try {
         logger.info('GET /api/messages', { requestId });
+
+        // Authenticate
+        const user = await getAuthenticatedUser(req);
 
         const searchParams = req.nextUrl.searchParams;
         const roomId = searchParams.get('roomId');
@@ -27,6 +30,18 @@ export async function GET(req: NextRequest) {
 
         if (!roomId) {
             throw new ValidationError('roomId is required');
+        }
+
+        // Verify user is a participant in this room
+        const { data: participant } = await supabaseAdmin
+            .from('room_participants')
+            .select('id')
+            .eq('room_id', roomId)
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+        if (!participant) {
+            throw new AppError('FORBIDDEN', 'You are not a participant in this room', 403);
         }
 
         const pagination = paginationSchema.parse({ page, limit });
@@ -61,7 +76,23 @@ export async function POST(req: NextRequest) {
         const validated = sendMessageSchema.parse(body);
 
         if (validated.senderId !== user.id) {
-            throw new AppError('Forbidden: You can only send messages as yourself', 'FORBIDDEN', 403);
+            throw new AppError('FORBIDDEN', 'You can only send messages as yourself', 403);
+        }
+
+        // Moderation check for text messages
+        if (validated.messageType === 'text' && validated.content) {
+            const moderationResult = await moderationService.checkContent(validated.content, 'safe');
+            if (moderationResult.flagged && !moderationResult.allowed) {
+                return NextResponse.json(
+                    {
+                        ok: false,
+                        error: 'MODERATION_BLOCKED',
+                        message: 'Your message was blocked by content moderation',
+                        statusCode: 400
+                    },
+                    { status: 400 }
+                );
+            }
         }
 
         let message;

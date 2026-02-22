@@ -92,16 +92,30 @@ export class BanService {
      */
     async isUserBanned(userId: string): Promise<boolean> {
         try {
-            const { data, error } = await supabaseAdmin.rpc('is_user_banned', {
-                p_user_id: userId
-            });
+            const { data, error } = await supabaseAdmin
+                .from('banned_users')
+                .select('user_id, banned_until')
+                .eq('user_id', userId)
+                .maybeSingle();
 
-            if (error) {
-                logger.warn('Failed to check ban status', { userId, error });
+            if (error || !data) {
+                // Table may not exist, or user not banned
                 return false;
             }
 
-            return data === true;
+            // Check if ban has expired
+            if (data.banned_until) {
+                const bannedUntil = new Date(data.banned_until);
+                if (bannedUntil < new Date()) {
+                    await supabaseAdmin
+                        .from('banned_users')
+                        .delete()
+                        .eq('user_id', userId);
+                    return false;
+                }
+            }
+
+            return true;
         } catch (error) {
             logger.error('Failed to check ban status', { userId, error });
             return false;
