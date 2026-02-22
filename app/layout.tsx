@@ -64,9 +64,11 @@ export const metadata = {
   }
 };
 
+import { ThemeProvider } from '../components/ThemeProvider';
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           async
@@ -92,11 +94,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body>
         <Providers>
-          <ModerationGate>
-            <Header />
-            <main className="min-h-screen flex flex-col">{children}</main>
-            <Footer />
-          </ModerationGate>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <ModerationGate>
+              <Header />
+              <main className="min-h-screen flex flex-col">{children}</main>
+              <Footer />
+            </ModerationGate>
+          </ThemeProvider>
         </Providers>
         <SpeedInsights />
         <Analytics />

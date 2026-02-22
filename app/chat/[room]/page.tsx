@@ -298,7 +298,8 @@ export default function ChatRoomPage() {
           seed2={isConnected ? 777 : 0}
           rep2={50}
           intensity={myIntensity}
-          className="relative flex flex-col h-[70vh]"
+          // Added pb-28 md:pb-24 to ensure AdSense auto-ads do not overlap the input area
+          className="relative flex flex-col h-[70vh] pb-28 md:pb-24"
         >
 
           <MessageList

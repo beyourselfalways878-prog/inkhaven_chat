@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Logo } from './Logo';
 import { useSessionStore } from '../stores/useSessionStore';
 import { Avatar } from './ui/avatar';
+import { ThemeToggle } from './ThemeToggle';
 
 export default function Header() {
   const session = useSessionStore((s) => s.session);
@@ -22,6 +23,7 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           {isLoggedIn ? (
             <>
               <Link href="/chat" className="rounded-full border border-slate-200 dark:border-white/10 px-4 py-2 text-sm text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white hover:border-slate-400 dark:hover:border-white/20 transition-colors">
