@@ -37,19 +37,19 @@ export default function FaqPage() {
   return (
     <main className="max-w-4xl mx-auto px-4 py-12 space-y-6">
       <h1 className="text-3xl font-bold">Frequently Asked Questions</h1>
-      <p className="text-slate-300">
+      <p className="text-slate-700 dark:text-slate-300">
         Find answers to common questions about InkHaven Chat.
       </p>
       <div className="space-y-3">
         {FAQ.map((item) => (
-          <div key={item.q} className="bg-white/5 border border-white/10 rounded-xl p-4">
+          <div key={item.q} className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-4">
             <p className="font-semibold">{item.q}</p>
-            <p className="text-slate-300 mt-1">{item.a}</p>
+            <p className="text-slate-700 dark:text-slate-300 mt-1">{item.a}</p>
           </div>
         ))}
       </div>
       <div className="text-center pt-6">
-        <p className="text-slate-400">
+        <p className="text-slate-600 dark:text-slate-400">
           Still have questions? <a href="/contact" className="text-blue-400 hover:underline">Contact our support team</a>.
         </p>
       </div>

@@ -250,10 +250,10 @@ export default function Page() {
         <div className="relative max-w-4xl mx-auto text-center">
           <div className="hyper-glass p-12 overflow-visible">
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 blur-3xl -z-10" />
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
+            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6">
               Ready to experience <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">real connection</span>?
             </h2>
-            <p className="text-lg text-white/60 mb-10 max-w-xl mx-auto">
+            <p className="text-lg text-slate-600 dark:text-white/60 mb-10 max-w-xl mx-auto">
               Join thousands of users who have found their space for authentic, anonymous conversations in the ultimate hyper-glass sanctuary.
             </p>
             <Button asChild size="lg" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-10 py-6 text-lg rounded-full shadow-[0_0_40px_rgba(99,102,241,0.4)] hover:shadow-[0_0_60px_rgba(99,102,241,0.6)] transition-all transform hover:scale-105">

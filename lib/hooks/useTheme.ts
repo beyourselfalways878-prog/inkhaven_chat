@@ -34,10 +34,15 @@ export function useTheme() {
 
         // Remove existing theme attribute
         root.removeAttribute('data-theme');
+        root.classList.remove('dark');
 
         // Set new theme
         if (themeValue !== 'system') {
             root.setAttribute('data-theme', themeValue);
+        }
+
+        if (resolved === 'dark') {
+            root.classList.add('dark');
         }
 
         // Update meta theme-color for mobile browsers

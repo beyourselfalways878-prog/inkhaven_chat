@@ -40,20 +40,20 @@ export default function InterestSelector({ onSubmit, initialData }: { onSubmit: 
   return (
     <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-slate-700">Display name</label>
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Display name</label>
         <input
           {...register('displayName')}
           placeholder="Choose a calm alias"
-          className="mt-2 block w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm shadow-sm focus:border-indigo-400 focus:outline-none"
+          className="mt-2 block w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-white/5 px-4 py-3 text-sm text-slate-900 dark:text-white shadow-sm focus:border-indigo-400 focus:outline-none"
         />
         {errors.displayName && <p className="text-xs text-red-600 mt-2">{errors.displayName.message}</p>}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700">Comfort level</label>
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Comfort level</label>
         <select
           {...register('comfortLevel')}
-          className="mt-2 block w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm shadow-sm"
+          className="mt-2 block w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-white/5 px-4 py-3 text-sm text-slate-900 dark:text-white shadow-sm"
           defaultValue="balanced"
         >
           <option value="gentle">Gentle & slow</option>
@@ -63,7 +63,7 @@ export default function InterestSelector({ onSubmit, initialData }: { onSubmit: 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700">Interests</label>
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Interests</label>
         <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-2">
           {interests.map((i) => {
             const chosenInterests = watch('chosen') || [];
@@ -72,8 +72,8 @@ export default function InterestSelector({ onSubmit, initialData }: { onSubmit: 
               <label key={i} className="group cursor-pointer">
                 <input type="checkbox" value={i} {...register('chosen')} className="peer sr-only" />
                 <span className={`flex items-center justify-center rounded-xl border px-3 py-2 text-xs font-medium shadow-sm transition ${isChecked
-                    ? 'border-indigo-400 text-indigo-600 bg-indigo-50'
-                    : 'border-slate-200 text-slate-600 bg-white/90'
+                  ? 'border-indigo-400 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10'
+                  : 'border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 bg-white/90 dark:bg-white/5'
                   }`}>
                   {i}
                 </span>

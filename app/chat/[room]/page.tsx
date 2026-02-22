@@ -208,8 +208,8 @@ export default function ChatRoomPage() {
     return (
       <div className="container mx-auto px-6 py-10">
         <div className="card p-0 overflow-hidden">
-          <div className="px-6 py-4 border-b border-white/5">
-            <div className="h-4 w-32 bg-white/5 rounded animate-pulse" />
+          <div className="px-6 py-4 border-b border-slate-200 dark:border-white/5">
+            <div className="h-4 w-32 bg-slate-200 dark:bg-white/5 rounded animate-pulse" />
           </div>
           <MessageSkeleton count={5} />
         </div>
@@ -221,9 +221,9 @@ export default function ChatRoomPage() {
 
   return (
     <div className="container mx-auto px-6 py-8">
-      <div className="hyper-glass overflow-hidden shadow-2xl border border-white/10">
+      <div className="hyper-glass overflow-hidden shadow-2xl border border-slate-200 dark:border-white/10">
         {/* Chat header */}
-        <div className="flex items-center justify-between border-b border-white/5 bg-obsidian-900/40 backdrop-blur-md px-6 py-4">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-obsidian-900/40 backdrop-blur-md px-6 py-4">
           <div className="flex items-center gap-4">
             {isConnected ? (
               <Avatar
@@ -237,7 +237,7 @@ export default function ChatRoomPage() {
               <Avatar displayName="?" size="md" showStatus status={connectionState === 'connecting' ? 'away' : 'offline'} />
             )}
             <div>
-              <div className="text-xl font-bold text-white tracking-wide">
+              <div className="text-xl font-bold text-slate-900 dark:text-white tracking-wide">
                 {isConnected ? 'Anonymous Partner' : 'Waiting in Limbo...'}
               </div>
               <div className="text-xs text-indigo-300 font-mono tracking-wider mt-0.5">
@@ -328,8 +328,8 @@ export default function ChatRoomPage() {
               className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm"
             >
               <Loader2 className="w-12 h-12 text-indigo-400 animate-spin mb-4" />
-              <p className="text-lg font-medium text-white animate-pulse">Finding your next match...</p>
-              <p className="text-sm text-white/40 mt-1">Hang tight</p>
+              <p className="text-lg font-medium text-slate-100 dark:text-white animate-pulse">Finding your next match...</p>
+              <p className="text-sm text-slate-300 dark:text-white/40 mt-1">Hang tight</p>
             </motion.div>
           )}
 
@@ -338,20 +338,20 @@ export default function ChatRoomPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+              className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-black/70 backdrop-blur-sm p-4"
             >
-              <div className="bg-obsidian-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm">
-                <h3 className="text-xl font-bold text-white mb-2">Report User</h3>
-                <p className="text-sm text-white/50 mb-4">Please specify why you are reporting this user. This action is closely monitored.</p>
+              <div className="bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-xl">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Report User</h3>
+                <p className="text-sm text-slate-500 dark:text-white/50 mb-4">Please specify why you are reporting this user. This action is closely monitored.</p>
                 <textarea
                   value={reportReason}
                   onChange={(e) => setReportReason(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors mb-4 resize-none"
+                  className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 transition-colors mb-4 resize-none"
                   rows={4}
                   placeholder="Reason for reporting..."
                 />
                 <div className="flex justify-end gap-3">
-                  <button onClick={() => setIsReporting(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-white/60 hover:text-white transition-colors">Cancel</button>
+                  <button onClick={() => setIsReporting(false)} className="px-4 py-2 rounded-xl text-sm font-medium text-slate-500 dark:text-white/60 hover:text-slate-700 dark:hover:text-white transition-colors">Cancel</button>
                   <button onClick={submitReport} disabled={!reportReason.trim()} className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium transition-colors disabled:opacity-50">Submit Report</button>
                 </div>
               </div>
