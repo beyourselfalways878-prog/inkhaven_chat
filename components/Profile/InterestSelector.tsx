@@ -5,6 +5,16 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { Sparkles } from 'lucide-react';
+
+const adjectives = ['Calm', 'Gentle', 'Quiet', 'Serene', 'Brave', 'Wise', 'Loyal', 'Swift', 'Wandering', 'Mystic', 'Silent', 'Lunar', 'Solar', 'Noble', 'Fierce'];
+const animals = ['Wolf', 'Owl', 'Bear', 'Fox', 'Deer', 'Hawk', 'Raven', 'Feline', 'Panther', 'Tiger', 'Lion', 'Eagle', 'Badger', 'Otter', 'Lynx', 'Stag'];
+
+const generateAnimalName = () => {
+  const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const animal = animals[Math.floor(Math.random() * animals.length)];
+  return `${adj} ${animal}`;
+};
 
 const interests = [
   'Gaming',
@@ -28,7 +38,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function InterestSelector({ onSubmit, initialData }: { onSubmit: (_values: FormValues) => void; initialData?: Partial<FormValues> }) {
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<FormValues>({
+  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       displayName: initialData?.displayName || '',
@@ -40,7 +50,17 @@ export default function InterestSelector({ onSubmit, initialData }: { onSubmit: 
   return (
     <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Display name</label>
+        <div className="flex items-center justify-between">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Display name</label>
+          <button
+            type="button"
+            onClick={() => setValue('displayName', generateAnimalName(), { shouldValidate: true })}
+            className="text-xs flex items-center gap-1 text-indigo-500 hover:text-indigo-600 transition-colors"
+          >
+            <Sparkles className="w-3 h-3" />
+            Auto-generate
+          </button>
+        </div>
         <input
           {...register('displayName')}
           placeholder="Choose a calm alias"
