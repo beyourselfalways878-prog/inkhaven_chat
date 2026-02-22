@@ -86,8 +86,10 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
 
                 <form onSubmit={handleAuth} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-medium text-slate-600 dark:text-white/70 mb-1">Email</label>
+                        <label htmlFor="email" className="block text-xs font-medium text-slate-600 dark:text-white/70 mb-1">Email</label>
                         <input
+                            id="email"
+                            name="email"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -99,8 +101,10 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
 
                     {!isForgotPassword && (
                         <div>
-                            <label className="block text-xs font-medium text-slate-600 dark:text-white/70 mb-1">Password</label>
+                            <label htmlFor="password" className="block text-xs font-medium text-slate-600 dark:text-white/70 mb-1">Password</label>
                             <input
+                                id="password"
+                                name="password"
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}

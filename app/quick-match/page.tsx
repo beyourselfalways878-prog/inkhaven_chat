@@ -207,6 +207,8 @@ export default function QuickMatchPage() {
                 </div>
 
                 <input
+                  id="interest-input"
+                  name="interest-input"
                   type="text"
                   value={interestInput}
                   onChange={e => setInterestInput(e.target.value)}
