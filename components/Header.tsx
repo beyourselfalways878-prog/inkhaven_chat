@@ -4,6 +4,7 @@ import { Logo } from './Logo';
 import { useSessionStore } from '../stores/useSessionStore';
 import { Avatar } from './ui/avatar';
 import { ThemeToggle } from './ThemeToggle';
+import BackgroundThemeSelector from './Backgrounds/BackgroundThemeSelector';
 
 export default function Header() {
   const session = useSessionStore((s) => s.session);
@@ -23,6 +24,7 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <BackgroundThemeSelector />
           <ThemeToggle />
           {isLoggedIn ? (
             <>

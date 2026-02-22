@@ -8,7 +8,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
 // Routes that require authentication (logged-in or anonymous Supabase session)
 const PROTECTED_ROUTES = ['/chat', '/settings', '/quick-match'];

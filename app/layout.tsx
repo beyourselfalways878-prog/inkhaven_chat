@@ -65,6 +65,7 @@ export const metadata = {
 };
 
 import { ThemeProvider } from '../components/ThemeProvider';
+import LiveBackgroundRenderer from '../components/Backgrounds/LiveBackgroundRenderer';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -95,9 +96,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <Providers>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <LiveBackgroundRenderer />
             <ModerationGate>
               <Header />
-              <main className="min-h-screen flex flex-col">{children}</main>
+              <main className="min-h-screen flex flex-col relative z-10">{children}</main>
               <Footer />
             </ModerationGate>
           </ThemeProvider>

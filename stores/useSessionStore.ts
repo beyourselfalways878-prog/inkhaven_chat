@@ -10,6 +10,7 @@ type Session = {
   comfortLevel?: 'gentle' | 'balanced' | 'bold' | null;
   reputation?: number | null;
   auraSeed?: number | null;
+  backgroundTheme?: 'aurora' | 'galactic' | 'rain' | 'none';
 };
 
 type State = {
@@ -39,6 +40,7 @@ export const useSessionStore = create<State>()(persist((set) => ({
       comfortLevel: state.session.comfortLevel,
       reputation: state.session.reputation,
       auraSeed: state.session.auraSeed,
+      backgroundTheme: state.session.backgroundTheme,
     }
   })
 }));
