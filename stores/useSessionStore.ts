@@ -11,6 +11,7 @@ type Session = {
   reputation?: number | null;
   auraSeed?: number | null;
   backgroundTheme?: 'aurora' | 'galactic' | 'rain' | 'none';
+  isPremium?: boolean;
 };
 
 type State = {
@@ -41,6 +42,7 @@ export const useSessionStore = create<State>()(persist((set) => ({
       reputation: state.session.reputation,
       auraSeed: state.session.auraSeed,
       backgroundTheme: state.session.backgroundTheme,
+      isPremium: state.session.isPremium,
     }
   })
 }));

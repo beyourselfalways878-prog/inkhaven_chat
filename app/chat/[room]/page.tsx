@@ -14,6 +14,11 @@ import { useWebRTC } from '../../../lib/hooks/useWebRTC';
 import { supabase } from '../../../lib/supabase';
 import { useToast } from '../../../components/ui/toast';
 
+interface PartnerProfile {
+  displayName: string;
+  avatarUrl?: string;
+}
+
 export default function ChatRoomPage() {
   const params = useParams();
   const roomId = (params?.room as string) || 'room_demo';
@@ -31,7 +36,10 @@ export default function ChatRoomPage() {
   const myRep = session.reputation ?? 50;
 
   // WebRTC P2P Hook
-  const { messages, connectionState, partnerId, partnerTyping, sendMessage, sendTyping, editMessage, reactToMessage } = useWebRTC(roomId, myId);
+  const { messages, connectionState, partnerId, partnerTyping, isRevealed, sendMessage, sendTyping, editMessage, reactToMessage } = useWebRTC(roomId, myId);
+
+  const [partnerProfile, setPartnerProfile] = useState<PartnerProfile | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'pending' | 'mutual'>('idle');
 
   useEffect(() => {
     const initAuth = async () => {
@@ -55,6 +63,21 @@ export default function ChatRoomPage() {
     };
     initAuth();
   }, [session, setSession]);
+
+  // Fetch partner profile when revealed
+  useEffect(() => {
+    if (isRevealed && partnerId && !partnerProfile) {
+      const fetchProfile = async () => {
+        const { data } = await supabase.from('profiles').select('display_name, avatar_url').eq('id', partnerId).single();
+        if (data) {
+          setPartnerProfile({ displayName: data.display_name, avatarUrl: data.avatar_url });
+          setSaveStatus('mutual');
+          toast.success(`Identities Revealed! You are now friends with ${data.display_name}`);
+        }
+      };
+      fetchProfile();
+    }
+  }, [isRevealed, partnerId, partnerProfile, toast]);
 
   const [panicked, setPanicked] = useState(false);
 
@@ -96,25 +119,37 @@ export default function ChatRoomPage() {
         return;
       }
 
+      if (messages.length === 0) {
+        toast.error("No messages to save yet.");
+        return;
+      }
+
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
 
-      if (token && messages.length > 0) {
-        await fetch('/api/chat/sync', {
+      if (token) {
+        setSaveStatus('pending');
+        const res = await fetch('/api/chat/save', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ roomId, messages }),
-          keepalive: true
+          body: JSON.stringify({ roomId, partnerId }),
         });
-        toast.success("Chat history saved!");
-      } else {
-        toast.error("No messages to save yet.");
+
+        const data = await res.json();
+        if (data.ok) {
+          if (data.status === 'pending') {
+            toast.success("Save request sent! Waiting for partner...");
+          } else if (data.status === 'mutual') {
+            // The REVEAL event handle this UI update via the socket
+          }
+        }
       }
     } catch (err) {
       toast.error("Failed to save chat.");
+      setSaveStatus('idle');
     }
   };
 
@@ -228,7 +263,7 @@ export default function ChatRoomPage() {
             {isConnected ? (
               <Avatar
                 userId={partnerId || 'partner'}
-                displayName={'Connected Partner'}
+                displayName={isRevealed && partnerProfile ? partnerProfile.displayName : 'Connected Partner'}
                 size="md"
                 showStatus
                 status={'online'}
@@ -237,11 +272,12 @@ export default function ChatRoomPage() {
               <Avatar displayName="?" size="md" showStatus status={connectionState === 'connecting' ? 'away' : 'offline'} />
             )}
             <div>
-              <div className="text-xl font-bold text-slate-900 dark:text-white tracking-wide">
-                {isConnected ? 'Anonymous Partner' : 'Waiting in Limbo...'}
+              <div className="text-xl font-bold text-slate-900 dark:text-white tracking-wide flex items-center gap-2">
+                {isConnected ? (isRevealed && partnerProfile ? partnerProfile.displayName : 'Anonymous Partner') : 'Waiting in Limbo...'}
+                {isRevealed && <div className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/20 text-green-500 uppercase tracking-widest border border-green-500/30">Friend</div>}
               </div>
               <div className="text-xs text-indigo-300 font-mono tracking-wider mt-0.5">
-                {connectionState === 'connecting' ? 'NEGOTIATING P2P CONNECTION...' : connectionState === 'disconnected' ? 'PARTNER DISCONNECTED' : 'SECURE P2P CHANNEL'}
+                {connectionState === 'connecting' ? 'NEGOTIATING P2P CONNECTION...' : connectionState === 'disconnected' ? 'PARTNER DISCONNECTED' : (isRevealed ? 'MUTUAL SECURE CHANNEL' : 'ANONYMOUS P2P CHANNEL')}
               </div>
             </div>
           </div>
@@ -249,16 +285,22 @@ export default function ChatRoomPage() {
             <PresenceIndicator
               onlineCount={isConnected ? 2 : 1}
               partnerStatus={isConnected ? 'online' : 'offline'}
-              partnerName={'Partner'}
+              partnerName={isRevealed && partnerProfile ? partnerProfile.displayName : 'Partner'}
               isConnected={isConnected}
             />
             <button
               onClick={handleSaveChat}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 text-xs font-medium transition-all hover:scale-105 active:scale-95"
-              title="Save chat history"
+              disabled={saveStatus !== 'idle'}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${saveStatus === 'mutual' ? 'bg-green-500/10 border-green-500/20 text-green-500'
+                : saveStatus === 'pending' ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300 animate-pulse'
+                  : 'bg-indigo-500/10 hover:bg-indigo-500/20 border-indigo-500/20 text-indigo-400 hover:scale-105 active:scale-95 border'
+                }`}
+              title={saveStatus === 'mutual' ? "Chat saved and identities revealed" : saveStatus === 'pending' ? "Waiting for partner to save..." : "Save chat & reveal identity"}
             >
               <Save size={14} />
-              <span className="hidden sm:inline uppercase tracking-widest">Save</span>
+              <span className="hidden sm:inline uppercase tracking-widest">
+                {saveStatus === 'mutual' ? 'Saved' : saveStatus === 'pending' ? 'Pending' : 'Save'}
+              </span>
             </button>
             <button
               onClick={() => setIsReporting(true)}

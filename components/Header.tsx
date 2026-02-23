@@ -1,14 +1,45 @@
 "use client";
+import { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Logo } from './Logo';
 import { useSessionStore } from '../stores/useSessionStore';
 import { Avatar } from './ui/avatar';
 import { ThemeToggle } from './ThemeToggle';
 import BackgroundThemeSelector from './Backgrounds/BackgroundThemeSelector';
+import { supabase } from '../lib/supabase';
+import { useToast } from './ui/toast';
 
 export default function Header() {
   const session = useSessionStore((s) => s.session);
   const isLoggedIn = !!session.userId;
+
+  const router = useRouter();
+  const toast = useToast();
+
+  useEffect(() => {
+    if (!session.userId) return;
+
+    const channel = supabase.channel(`user_${session.userId}`);
+
+    channel.on('broadcast', { event: 'invite' }, ({ payload }) => {
+      const { roomId, inviterName } = payload;
+
+      // The custom toast in this app currently only supports simple strings.
+      // We will use a native confirm dialog for the invite action to ensure they can click it.
+      if (window.confirm(`Private Room Invite! ${inviterName} invited you to chat. Do you want to join?`)) {
+        router.push(`/chat/${roomId}`);
+      } else {
+        toast.info(`You declined the invite from ${inviterName}.`);
+      }
+    });
+
+    channel.subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session.userId, router, toast]);
 
   return (
     <header className="w-full border-b border-slate-200 dark:border-white/5 backdrop-blur-xl bg-white/80 dark:bg-white/[0.02]">
@@ -19,6 +50,7 @@ export default function Header() {
 
         <nav className="hidden md:flex gap-5 items-center text-sm text-slate-500 dark:text-slate-400">
           <Link href="/quick-match" className="hover:text-slate-900 dark:hover:text-white/80 transition-colors">Quick Match</Link>
+          <Link href="/friends" className="hover:text-slate-900 dark:hover:text-white/80 transition-colors">Friends</Link>
           <Link href="/settings" className="hover:text-slate-900 dark:hover:text-white/80 transition-colors">Settings</Link>
           <Link href="/about" className="hover:text-slate-900 dark:hover:text-white/80 transition-colors">About</Link>
         </nav>

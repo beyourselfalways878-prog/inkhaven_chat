@@ -54,6 +54,7 @@ export function useWebRTC(roomId: string, userId: string) {
     const [connectionState, setConnectionState] = useState<ConnectionState>('connecting');
     const [partnerId, setPartnerId] = useState<string | null>(null);
     const [partnerTyping, setPartnerTyping] = useState(false);
+    const [isRevealed, setIsRevealed] = useState(false);
 
     const pcRef = useRef<RTCPeerConnection | null>(null);
     const channelRef = useRef<RealtimeChannel | null>(null);
@@ -63,6 +64,7 @@ export function useWebRTC(roomId: string, userId: string) {
     const pendingCandidatesRef = useRef<any[]>([]);
     const incomingRateRef = useRef<number[]>([]);
     const outboxRef = useRef<WebRTCMessage[]>([]);
+    const isNegotiatingRef = useRef(false);
 
     const playNotificationSound = useCallback(() => {
         try {
@@ -136,6 +138,10 @@ export function useWebRTC(roomId: string, userId: string) {
             setPartnerId(senderId);
 
             try {
+                if (type === 'REVEAL') {
+                    setIsRevealed(true);
+                    return;
+                }
                 if (type === 'OFFER') {
                     // To prevent offer collision
                     if (seenOffersRef.current.has(senderId)) return;
@@ -159,6 +165,7 @@ export function useWebRTC(roomId: string, userId: string) {
                     });
                 } else if (type === 'ANSWER') {
                     await pc.setRemoteDescription(new RTCSessionDescription(data));
+                    isNegotiatingRef.current = false;
 
                     // Flush pending ICE candidates if they arrived early
                     for (const candidate of pendingCandidatesRef.current) {
@@ -270,15 +277,43 @@ export function useWebRTC(roomId: string, userId: string) {
         };
 
         // 5. Connect Channel & Decide who Offers
+        let pingInterval: ReturnType<typeof setInterval>;
         sigChannel.subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
-                sigChannel.send({
-                    type: 'broadcast',
-                    event: 'hello',
-                    payload: { senderId: userId }
-                });
+                const sendHello = () => {
+                    if (pc.iceConnectionState !== 'connected' && pc.iceConnectionState !== 'completed') {
+                        sigChannel.send({
+                            type: 'broadcast',
+                            event: 'hello',
+                            payload: { senderId: userId }
+                        });
+                    } else {
+                        clearInterval(pingInterval);
+                    }
+                };
+                sendHello();
+                pingInterval = setInterval(sendHello, 2500); // Retry ping every 2.5s until ICE connected
             }
         });
+
+        const tryInitiateOffer = async () => {
+            if (isNegotiatingRef.current || pc.signalingState !== 'stable') return;
+            isNegotiatingRef.current = true;
+            try {
+                const sendChannel = pc.createDataChannel('chat');
+                setupDataChannel(sendChannel);
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                sigChannel.send({
+                    type: 'broadcast',
+                    event: 'signal',
+                    payload: { type: 'OFFER', senderId: userId, data: pc.localDescription }
+                });
+            } catch (e) {
+                console.error('[WebRTC] Error creating offer', e);
+                isNegotiatingRef.current = false;
+            }
+        };
 
         // Handle HELLO
         sigChannel.on('broadcast', { event: 'hello' }, async ({ payload }) => {
@@ -288,21 +323,7 @@ export function useWebRTC(roomId: string, userId: string) {
 
             // Deciding who makes the offer: Lexicographical comparison of IDs
             if (userId > senderId) {
-                if (pc.signalingState !== 'stable') return;
-                const sendChannel = pc.createDataChannel('chat');
-                setupDataChannel(sendChannel);
-
-                try {
-                    const offer = await pc.createOffer();
-                    await pc.setLocalDescription(offer);
-                    sigChannel.send({
-                        type: 'broadcast',
-                        event: 'signal',
-                        payload: { type: 'OFFER', senderId: userId, data: pc.localDescription }
-                    });
-                } catch (e) {
-                    console.error('[WebRTC] Error creating offer', e);
-                }
+                tryInitiateOffer();
             } else {
                 // I am smaller. I must ensure the larger peer knows I am here so they can send the offer!
                 sigChannel.send({
@@ -320,25 +341,12 @@ export function useWebRTC(roomId: string, userId: string) {
             setPartnerId(senderId);
 
             if (userId > senderId) {
-                if (pc.signalingState !== 'stable') return;
-                const sendChannel = pc.createDataChannel('chat');
-                setupDataChannel(sendChannel);
-
-                try {
-                    const offer = await pc.createOffer();
-                    await pc.setLocalDescription(offer);
-                    sigChannel.send({
-                        type: 'broadcast',
-                        event: 'signal',
-                        payload: { type: 'OFFER', senderId: userId, data: pc.localDescription }
-                    });
-                } catch (e) {
-                    console.error('[WebRTC] Error creating offer', e);
-                }
+                tryInitiateOffer();
             }
         });
 
         return () => {
+            clearInterval(pingInterval);
             dataChannelRef.current?.close();
             pc.close();
             supabase.removeChannel(sigChannel);
@@ -403,6 +411,7 @@ export function useWebRTC(roomId: string, userId: string) {
         editMessage,
         reactToMessage,
         partnerId,
-        partnerTyping
+        partnerTyping,
+        isRevealed
     };
 }

@@ -93,34 +93,43 @@ export default function QuickMatchPage() {
     hasStarted.current = true;
   }, []);
 
-  // 2. Realtime Subscription for "Waiting" users
+  // 2. Poll for "Waiting" users
   useEffect(() => {
     if (status !== 'searching' || !session.userId) return;
 
-    const channel = supabase
-      .channel(`quick-match-${session.userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'room_participants',
-          filter: `user_id=eq.${session.userId}`
-        },
-        (payload) => {
-          setStatus('matched');
-          toast.success('Match found! Connecting you now...');
-          setTimeout(() => {
-            router.push(`/chat/${payload.new.room_id}`);
-          }, 1500);
-        }
-      )
-      .subscribe();
+    const interval = setInterval(async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
+        if (!token) return;
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [status, session.userId, router, toast]);
+        const res = await fetch('/api/quick-match', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'X-Turnstile-Token': turnstileToken || '1x00000000000000000000AA'
+          },
+          body: JSON.stringify({ interests })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.data?.matchFound && data.data?.roomId) {
+            setStatus('matched');
+            toast.success('Match found! Connecting you now...');
+            setTimeout(() => {
+              router.push(`/chat/${data.data.roomId}`);
+            }, 1000);
+          }
+        }
+      } catch (err) {
+        console.error('Polling error', err);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [status, session.userId, router, toast, turnstileToken, interests]);
 
   // Handle Interest Tag Input
   const handleAddInterest = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -221,7 +230,7 @@ export default function QuickMatchPage() {
 
               <div className="min-h-[65px] flex items-center justify-center w-full mb-6">
                 <Turnstile
-                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
                   onSuccess={(token) => setTurnstileToken(token)}
                   options={{ theme: 'dark' }}
                 />

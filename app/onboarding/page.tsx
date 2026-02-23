@@ -15,10 +15,13 @@ export default function Onboarding() {
       const { data: sessionData } = await supabase.auth.getSession();
       let user = sessionData?.session?.user ?? null;
 
+      let token = sessionData?.session?.access_token ?? null;
+
       if (!user) {
-        const { data, error } = await supabase.auth.signInAnonymously();
+        const { data: anonData, error } = await supabase.auth.signInAnonymously();
         if (error) throw error;
-        user = data.user ?? null;
+        user = anonData.user ?? null;
+        token = anonData.session?.access_token ?? null;
       }
 
       const userId = user?.id ?? `guest_${Math.random().toString(36).slice(2, 9)}`;
@@ -26,7 +29,10 @@ export default function Onboarding() {
 
       const profileRes = await fetch('/api/profile/update', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           userId,
           displayName: data.displayName,

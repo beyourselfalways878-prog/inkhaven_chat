@@ -44,12 +44,18 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
                 });
                 if (signInError) throw signInError;
             } else {
-                const { error: signUpError } = await supabase.auth.signUp({
+                const { data, error: signUpError } = await supabase.auth.signUp({
                     email,
                     password,
-                    options: { captchaToken: turnstileToken }
+                    options: { captchaToken: turnstileToken, emailRedirectTo: `${window.location.origin}/` }
                 });
                 if (signUpError) throw signUpError;
+
+                if (data?.user && !data.session) {
+                    setSuccessMsg('Registration successful! Please check your email to verify your account.');
+                    setLoading(false);
+                    return;
+                }
             }
             onClose();
             window.location.reload();

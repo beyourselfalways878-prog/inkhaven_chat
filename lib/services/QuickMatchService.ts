@@ -103,6 +103,16 @@ export class QuickMatchService {
                 // Notify the partner by setting their match key (expires in 30 seconds)
                 await redis.setex(`match:${partnerId}`, 30, roomId);
 
+                // Realtime broadcast to the waiting partner
+                // We don't await this because we want it to be fire-and-forget to minimize latency.
+                supabaseAdmin.channel(`quick-match-${partnerId}`).send({
+                    type: 'broadcast',
+                    event: 'match_found',
+                    payload: { room_id: roomId }
+                }).catch(err => {
+                    logger.error('Failed to notify partner via broadcast', { partnerId, error: err });
+                });
+
                 logger.info('In-Memory Room created', { roomId, userId, partnerId });
 
                 return {

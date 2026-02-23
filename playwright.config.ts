@@ -22,6 +22,8 @@ export default defineConfig({
     env: {
       // Force deterministic mock chat during Playwright runs and set port cross-platform
       NEXT_PUBLIC_USE_MOCK_CHAT: '1',
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: '1x00000000000000000000AA',
+      TURNSTILE_SECRET_KEY: '1x0000000000000000000000000000000AA',
       PORT: '3001'
     }
   },

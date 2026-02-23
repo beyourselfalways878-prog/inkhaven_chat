@@ -12,7 +12,11 @@ export async function POST(req: NextRequest) {
     try {
         // Only authenticated users can sync chat history
         const user = await getAuthenticatedUser(req);
-        logger.info('POST /api/chat/sync', { requestId, userId: user.id });
+        logger.info('POST /api/chat/sync', { requestId, userId: user.id, isAnonymous: user.isAnonymous });
+
+        if (user.isAnonymous) {
+            return NextResponse.json({ ok: true, skipped: 'anonymous' });
+        }
 
         const { roomId, messages } = await req.json();
 

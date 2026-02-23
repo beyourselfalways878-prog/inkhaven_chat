@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS public.reports (
 );
 
 ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can insert reports" ON public.reports FOR INSERT WITH CHECK (auth.uid() = reporter_id);
-CREATE POLICY "Users can view their own reports" ON public.reports FOR SELECT USING (auth.uid() = reporter_id);
+CREATE POLICY "Users can insert reports" ON public.reports FOR INSERT TO authenticated WITH CHECK (auth.uid() = reporter_id);
+CREATE POLICY "Users can view their own reports" ON public.reports FOR SELECT TO authenticated USING (auth.uid() = reporter_id);
 
 -- Create blocks table
 CREATE TABLE IF NOT EXISTS public.blocks (

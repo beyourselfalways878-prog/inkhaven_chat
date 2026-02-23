@@ -6,6 +6,7 @@ export interface AuthenticatedUser {
     id: string;
     email?: string;
     role?: string;
+    isAnonymous?: boolean;
 }
 
 /**
@@ -30,6 +31,7 @@ export async function getAuthenticatedUser(req: NextRequest): Promise<Authentica
     return {
         id: user.id,
         email: user.email,
-        role: user.role
+        role: user.role,
+        isAnonymous: user.is_anonymous
     };
 }
