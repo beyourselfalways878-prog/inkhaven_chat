@@ -10,10 +10,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Routes that require authentication (logged-in or anonymous Supabase session)
-const PROTECTED_ROUTES = ['/chat', '/settings', '/quick-match'];
+const PROTECTED_ROUTES = ['/chat', '/settings'];
 
 // Routes that are always public
-const PUBLIC_ROUTES = ['/', '/onboarding', '/legal', '/api/health', '/api/auth'];
+const PUBLIC_ROUTES = ['/', '/onboarding', '/legal', '/quick-match', '/api/health', '/api/auth'];
 
 // API route prefix
 const API_PREFIX = '/api/';

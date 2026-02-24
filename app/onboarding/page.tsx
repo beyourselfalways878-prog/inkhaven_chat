@@ -1,17 +1,13 @@
 "use client";
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import InterestSelector from '../../components/Profile/InterestSelector';
 import { useSessionStore } from '../../stores/useSessionStore';
 import { supabase } from '../../lib/supabase';
 import { Fingerprint, MessageCircle, Sparkles } from 'lucide-react';
 import AuraSphere from '../../components/Profile/AuraSphere';
-import { Turnstile } from '@marsidev/react-turnstile';
-
 export default function Onboarding() {
   const router = useRouter();
   const setSession = useSessionStore((s) => s.setSession);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   async function handleSubmit(data: any) {
     try {
@@ -21,9 +17,7 @@ export default function Onboarding() {
       let token = sessionData?.session?.access_token ?? null;
 
       if (!user) {
-        const { data: anonData, error } = await supabase.auth.signInAnonymously({
-          options: captchaToken ? { captchaToken } : undefined
-        });
+        const { data: anonData, error } = await supabase.auth.signInAnonymously();
         if (error) throw error;
         user = anonData.user ?? null;
         token = anonData.session?.access_token ?? null;
@@ -121,13 +115,6 @@ export default function Onboarding() {
             </div>
 
             <div className="mt-6 relative z-10">
-              <div className="mb-4 flex justify-center">
-                <Turnstile
-                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
-                  onSuccess={(token) => setCaptchaToken(token)}
-                  options={{ theme: 'auto', size: 'normal' }}
-                />
-              </div>
               <InterestSelector onSubmit={handleSubmit} />
             </div>
           </div>

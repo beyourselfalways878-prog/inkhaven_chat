@@ -3,7 +3,6 @@ import { quickMatchService } from '../../../lib/services/QuickMatchService';
 import { getAuthenticatedUser } from '../../../lib/auth';
 import { handleApiError, generateRequestId } from '../../../lib/middleware/errorHandler';
 import { createLogger } from '../../../lib/logger/Logger';
-import { verifyTurnstileToken } from '../../../lib/services/turnstile';
 
 const logger = createLogger('QuickMatchAPI');
 

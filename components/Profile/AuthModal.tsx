@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Loader2, Fingerprint } from 'lucide-react';
-import { Turnstile } from '@marsidev/react-turnstile';
 
 export default function AuthModal({ onClose }: { onClose: () => void }) {
     const [isLogin, setIsLogin] = useState(false);
@@ -12,15 +11,14 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
-    const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
-        if (!turnstileToken) {
-            setError("Please complete the security check.");
+        if (!email || !password && !isForgotPassword) {
+            setError("Please fill in all fields.");
             setLoading(false);
             return;
         }
@@ -39,15 +37,14 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
             if (isLogin) {
                 const { error: signInError } = await supabase.auth.signInWithPassword({
                     email,
-                    password,
-                    options: { captchaToken: turnstileToken }
+                    password
                 });
                 if (signInError) throw signInError;
             } else {
                 const { data, error: signUpError } = await supabase.auth.signUp({
                     email,
                     password,
-                    options: { captchaToken: turnstileToken, emailRedirectTo: `${window.location.origin}/` }
+                    options: { emailRedirectTo: `${window.location.origin}/` }
                 });
                 if (signUpError) throw signUpError;
 
@@ -145,17 +142,11 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
                         </div>
                     )}
 
-                    <div className="flex justify-center min-h-[65px]">
-                        <Turnstile
-                            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-                            onSuccess={setTurnstileToken}
-                            options={{ theme: 'dark' }}
-                        />
-                    </div>
+
 
                     <button
                         type="submit"
-                        disabled={loading || !turnstileToken}
+                        disabled={loading}
                         className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-white text-sm font-medium transition-colors flex items-center justify-center disabled:opacity-50"
                     >
                         {loading ? (
