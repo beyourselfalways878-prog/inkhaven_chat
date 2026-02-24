@@ -70,6 +70,16 @@ const nextConfig = {
         ]
       }
     ];
+  },
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.inkhaven.in' }],
+        destination: 'https://inkhaven.in/:path*',
+        permanent: true,
+      }
+    ];
   }
 }
 
