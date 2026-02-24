@@ -93,7 +93,7 @@ export default function Page() {
     <div className="relative min-h-screen overflow-hidden">
       {/* Animated Background */}
       <div className="fixed inset-0 -z-10 bg-obsidian-950">
-        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay" />
+        <div className="absolute inset-0 opacity-[0.15] mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }} />
         <FloatingOrb delay={0} size="w-96 h-96" color="linear-gradient(135deg, rgba(99, 102, 241, 0.4) 0%, rgba(139, 92, 246, 0.4) 100%)" position="top-[-10%] left-[-5%]" />
         <FloatingOrb delay={2} size="w-80 h-80" color="linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(20, 184, 166, 0.3) 100%)" position="top-[20%] right-[-10%]" />
         <FloatingOrb delay={4} size="w-72 h-72" color="linear-gradient(135deg, rgba(236, 72, 153, 0.3) 0%, rgba(244, 63, 94, 0.3) 100%)" position="bottom-[10%] left-[20%]" />

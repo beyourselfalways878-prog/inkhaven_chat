@@ -32,7 +32,9 @@ export default function QuickMatchPage() {
       let token = sessionData?.session?.access_token ?? null;
 
       if (!token) {
-        const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
+        const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously({
+          options: turnstileToken ? { captchaToken: turnstileToken } : undefined
+        });
         if (anonError) throw anonError;
         token = anonData.session?.access_token ?? null;
         const userId = anonData.user?.id ?? session.userId;

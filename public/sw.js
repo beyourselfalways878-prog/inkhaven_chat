@@ -28,7 +28,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Pass through all requests directly to the network in the WebRTC era
-  // No more caching API routes or queued database syncs.
+  // Only intercept same-origin requests. Let third-party requests
+  // (Sentry, Supabase, AdSense, etc.) pass through natively.
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) {
+    return; // Don't call respondWith — browser handles it natively
+  }
   event.respondWith(fetch(event.request));
 });
