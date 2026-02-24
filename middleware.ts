@@ -12,8 +12,11 @@ import { NextRequest, NextResponse } from 'next/server';
 // Routes that require authentication (logged-in or anonymous Supabase session)
 const PROTECTED_ROUTES = ['/chat', '/settings'];
 
-// Routes that are always public
+// Routes that are always public (these still require global Turnstile verification)
 const PUBLIC_ROUTES = ['/', '/onboarding', '/legal', '/quick-match', '/api/health', '/api/auth'];
+
+// Routes that bypass Turnstile entirely
+const TURNSTILE_BYPASS_ROUTES = ['/verify', '/api/verify-turnstile'];
 
 // API route prefix
 const API_PREFIX = '/api/';
@@ -77,6 +80,31 @@ export async function middleware(req: NextRequest) {
     ) {
         return NextResponse.next();
     }
+
+    // --- GLOBAL TURNSTILE ENFORCEMENT ---
+    // If the user hasn't passed Turnstile in the last 24hrs, redirect to `/verify`.
+    // We skip this check for actual Turnstile endpoints to prevent infinite redirect loops.
+    // We also skip it for some background/cron APIs if needed, but for now we enforce it.
+
+    // Check if the current route is exempted from the Turnstile gate
+    const isBypassRoute = TURNSTILE_BYPASS_ROUTES.some(r => pathname.startsWith(r));
+
+    // Do not block API requests globally here otherwise the background polling fails.
+    // We only enforce the global Turnstile check for PAGE navigations.
+    const isNavigationRequest = !pathname.startsWith('/api/');
+
+    if (isNavigationRequest && !isBypassRoute) {
+        const hasVerifiedCookie = req.cookies.has('inkhaven_verified');
+        if (!hasVerifiedCookie) {
+            const url = req.nextUrl.clone();
+            url.pathname = '/verify';
+            if (pathname !== '/') {
+                url.searchParams.set('redirect', pathname);
+            }
+            return NextResponse.redirect(url);
+        }
+    }
+    // -------------------------------------
 
     // Skip public routes
     if (isPublicRoute(pathname)) {
