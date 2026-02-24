@@ -24,13 +24,20 @@ export default function VerifyPage() {
         setErrorMsg('');
 
         try {
+            // Introduce a timeout so it doesn't spin forever if the network hangs
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+
             const res = await fetch('/api/verify-turnstile', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ token }),
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
 
             const data = await res.json();
 
@@ -41,10 +48,14 @@ export default function VerifyPage() {
                 toast.success('Security check passed.');
             } else {
                 setErrorMsg(data.error || 'Verification failed. Please try again.');
-                setVerifying(false);
+                setVerifying(false); // Reset to allow them to try again, although turnstile widget might need a reset
             }
         } catch (err: any) {
-            setErrorMsg('Network error. Please check your connection and try again.');
+            if (err.name === 'AbortError') {
+                setErrorMsg('Verification request timed out. Please check your connection and try again.');
+            } else {
+                setErrorMsg('Network error. Please check your connection and try again.');
+            }
             setVerifying(false);
         }
     };
@@ -81,12 +92,19 @@ export default function VerifyPage() {
                         </div>
                     ) : (
                         <>
-                            <div className="w-full flex items-center justify-center min-h-[65px]">
+                            <div className="w-full flex flex-col items-center justify-center min-h-[65px] gap-2">
                                 <Turnstile
                                     siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''}
                                     onSuccess={handleVerify}
+                                    onError={() => setErrorMsg('Widget failed to load. Please disable extreme privacy shields or adblockers for this site.')}
+                                    onExpire={() => setErrorMsg('Security challenge expired. Please refresh the page.')}
                                     options={{ theme: 'auto' }}
                                 />
+                                {errorMsg && errorMsg.includes('Widget failed') && (
+                                    <span className="text-xs text-slate-500 max-w-xs text-center mt-2">
+                                        Cloudflare Turnstile requires access to its verification servers. Strict tracker prevention can sometimes block it.
+                                    </span>
+                                )}
                             </div>
                             {process.env.NODE_ENV === 'development' && (
                                 <button
