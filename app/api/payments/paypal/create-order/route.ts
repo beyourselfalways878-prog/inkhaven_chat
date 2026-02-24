@@ -1,19 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import paypal from '@paypal/checkout-server-sdk';
 
+import { getPaypalClient } from '../../../../../lib/paypal';
+
 // Lifetime Premium Cost in USD
 const PREMIUM_PRICE_USD = "9.99";
-
-const Environment = process.env.PAYPAL_ENVIRONMENT === 'production'
-    ? paypal.core.LiveEnvironment
-    : paypal.core.SandboxEnvironment;
-
-export const paypalClient = new paypal.core.PayPalHttpClient(
-    new Environment(
-        process.env.PAYPAL_CLIENT_ID!,
-        process.env.PAYPAL_CLIENT_SECRET!
-    )
-);
 
 export async function POST(req: NextRequest) {
     try {
@@ -39,7 +30,8 @@ export async function POST(req: NextRequest) {
             ],
         });
 
-        const response = await paypalClient.execute(request);
+        const client = getPaypalClient();
+        const response = await client.execute(request);
 
         return NextResponse.json({
             id: response.result.id,

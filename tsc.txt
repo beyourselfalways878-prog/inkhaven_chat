@@ -1,0 +1,7 @@
+.next/types/app/api/payments/paypal/create-order/route.ts(12,13): error TS2344: Type 'OmitWithTag<typeof import("C:/Users/PC/Music/inkhaven-chat/app/api/payments/paypal/create-order/route"), "OPTIONS" | "POST" | "GET" | "PATCH" | "DELETE" | "HEAD" | "maxDuration" | "PUT" | ... 7 more ... | "runtime", "">' does not satisfy the constraint '{ [x: string]: never; }'.
+  Property 'paypalClient' is incompatible with index signature.
+    Type 'any' is not assignable to type 'never'.
+app/api/payments/paypal/capture-order/route.ts(2,20): error TS7016: Could not find a declaration file for module '@paypal/checkout-server-sdk'. 'C:/Users/PC/Music/inkhaven-chat/node_modules/@paypal/checkout-server-sdk/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/paypal__checkout-server-sdk` if it exists or add a new declaration (.d.ts) file containing `declare module '@paypal/checkout-server-sdk';`
+app/api/payments/paypal/create-order/route.ts(2,20): error TS7016: Could not find a declaration file for module '@paypal/checkout-server-sdk'. 'C:/Users/PC/Music/inkhaven-chat/node_modules/@paypal/checkout-server-sdk/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/paypal__checkout-server-sdk` if it exists or add a new declaration (.d.ts) file containing `declare module '@paypal/checkout-server-sdk';`

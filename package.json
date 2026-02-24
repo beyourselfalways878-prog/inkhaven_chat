@@ -52,6 +52,7 @@
     "@playwright/test": "^1.35.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^25.2.3",
+    "@types/paypal__checkout-server-sdk": "^1.0.8",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@typescript-eslint/eslint-plugin": "^8.53.1",

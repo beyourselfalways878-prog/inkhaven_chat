@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import paypal from '@paypal/checkout-server-sdk';
 import { createClient } from '@supabase/supabase-js';
-import { paypalClient } from '../create-order/route';
+import { getPaypalClient } from '../../../../../lib/paypal';
 
 export async function POST(req: NextRequest) {
     try {
@@ -12,9 +12,10 @@ export async function POST(req: NextRequest) {
         }
 
         // Capture the payment
+        const client = getPaypalClient();
         const request = new paypal.orders.OrdersCaptureRequest(orderID);
         request.requestBody({} as any);
-        const captureResponse = await paypalClient.execute(request);
+        const captureResponse = await client.execute(request);
 
         // Verify it was successful
         if (captureResponse.result.status === 'COMPLETED') {
