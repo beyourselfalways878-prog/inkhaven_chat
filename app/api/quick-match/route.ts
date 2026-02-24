@@ -35,16 +35,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ ok: true, data: result });
         }
 
-        // Only enforce Turnstile on initial join
-        const turnstileToken = req.headers.get('x-turnstile-token');
-        if (!turnstileToken) {
-            return NextResponse.json({ ok: false, message: 'Missing Turnstile security token' }, { status: 400 });
-        }
-
-        const isValid = await verifyTurnstileToken(turnstileToken);
-        if (!isValid) {
-            return NextResponse.json({ ok: false, message: 'Security check failed. Please refresh.' }, { status: 403 });
-        }
+        // Turnstile validation removed since Supabase already verified it for Anon sign-ins 
+        // and throwing 403 here breaks because Turnstile tokens are single-use.
 
         const interests = Array.isArray(body.interests) ? body.interests : [];
         const result = await quickMatchService.findMatch(user.id, interests);
