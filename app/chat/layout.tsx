@@ -1,3 +1,4 @@
+import React from 'react';
 import RequireProfile from '../../components/RequireProfile';
 
 export default function ChatLayout({ children }: { children: React.ReactNode }) {

@@ -24,7 +24,7 @@ export default function AdBlockDetector({ children }: { children: React.ReactNod
             // Method 1: Check if the global googletag/adsbygoogle object was injected but blocked
             try {
                 // Create a bait request to a known ad-serving domain
-                const response = await fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', {
+                await fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', {
                     method: 'HEAD',
                     mode: 'no-cors',
                     cache: 'no-store'
@@ -100,7 +100,7 @@ export default function AdBlockDetector({ children }: { children: React.ReactNod
                             className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-medium transition-all"
                         >
                             <RefreshCw size={18} />
-                            I've disabled it, refresh page
+                            I&apos;ve disabled it, refresh page
                         </button>
 
                         <Link

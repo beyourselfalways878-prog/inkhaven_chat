@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
-import { createClient } from '@supabase/supabase-js';
 
 // Lifetime Premium Cost in Indian Rupees (INR)
 const PREMIUM_PRICE_INR = 499;

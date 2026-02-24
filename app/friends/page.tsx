@@ -123,7 +123,7 @@ export default function FriendsPage() {
             <div className="flex items-center justify-between mb-8">
                 <div>
                     <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Your Connections</h1>
-                    <p className="text-slate-600 dark:text-white/60 mt-2">People you've mutually saved chats with.</p>
+                    <p className="text-slate-600 dark:text-white/60 mt-2">People you&apos;ve mutually saved chats with.</p>
                 </div>
             </div>
 
@@ -145,7 +145,7 @@ export default function FriendsPage() {
                                 <UserX className="w-10 h-10 opacity-50" />
                             </div>
                             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No friends yet</h3>
-                            <p className="max-w-md">When you and your anonymous partner both click "Save", you'll see each other here.</p>
+                            <p className="max-w-md">When you and your anonymous partner both click &quot;Save&quot;, you&apos;ll see each other here.</p>
                             <button
                                 onClick={() => router.push('/quick-match')}
                                 className="mt-8 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-indigo-500/25"

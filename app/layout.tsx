@@ -66,8 +66,6 @@ export const metadata = {
 
 import { ThemeProvider } from '../components/ThemeProvider';
 import LiveBackgroundRenderer from '../components/Backgrounds/LiveBackgroundRenderer';
-import AdBlockDetector from '../components/AdBlockDetector';
-import DynamicAdSense from '../components/DynamicAdSense';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

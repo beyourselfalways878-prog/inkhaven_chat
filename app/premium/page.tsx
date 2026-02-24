@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, ShieldCheck, Heart, Crown, Loader2 } from 'lucide-react';
 import { useSessionStore } from '../../stores/useSessionStore';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../../lib/supabase';
 import { AuraBlendBackground } from '../../components/InkAura';
 
 export default function PremiumPage() {
@@ -117,7 +116,7 @@ export default function PremiumPage() {
 
     if (session.isPremium) {
         return (
-            <AuraBlendBackground seed1={100} rep1={100} intensity={20} className="min-h-screen flex items-center justify-center p-6">
+            <AuraBlendBackground seed1={100} seed2={100} rep1={100} intensity={20} className="min-h-screen flex items-center justify-center p-6">
                 <div className="max-w-md w-full text-center">
                     <div className="w-20 h-20 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                         <Crown className="w-10 h-10 text-indigo-500" />
@@ -142,7 +141,7 @@ export default function PremiumPage() {
                         Become a Sanctuary Keeper
                     </h1>
                     <p className="text-lg text-slate-600 dark:text-slate-300">
-                        InkHaven is 100% free. We use non-intrusive ads to keep the servers running. If you'd rather not see ads, you can support us directly.
+                        InkHaven is 100% free. We use non-intrusive ads to keep the servers running. If you&apos;d rather not see ads, you can support us directly.
                     </p>
                 </div>
 
