@@ -79,6 +79,7 @@ export default function VerifyPage() {
                             <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
                             <span className="text-xs text-slate-500 dark:text-white/50 font-medium">Validating clearance...</span>
                         </div>
+                    ) : (
                         <>
                             <div className="w-full flex items-center justify-center min-h-[65px]">
                                 <Turnstile
@@ -96,6 +97,7 @@ export default function VerifyPage() {
                                 </button>
                             )}
                         </>
+                    )}
                 </div>
 
                 {errorMsg && (
