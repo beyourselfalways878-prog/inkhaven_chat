@@ -134,7 +134,7 @@ npm run dev
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
-| `OPENAI_API_KEY` | Optional: AI moderation |
+
 | `SENTRY_AUTH_TOKEN` | Optional: Error tracking |
 
 ---

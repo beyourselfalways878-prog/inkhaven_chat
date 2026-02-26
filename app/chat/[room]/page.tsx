@@ -358,6 +358,7 @@ export default function ChatRoomPage() {
             onIntensityChange={setMyIntensity}
             onSendMessage={sendMessage}
             onTyping={sendTyping}
+            isPremium={session.isPremium}
           />
         </AuraBlendBackground>
 

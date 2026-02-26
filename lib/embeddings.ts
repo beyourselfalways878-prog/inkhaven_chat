@@ -1,20 +1,26 @@
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY as string | undefined;
+import { getGeminiClient } from './gemini';
+import { createLogger } from './logger/Logger';
 
-export async function computeEmbedding(input: string) {
-  if (!OPENAI_API_KEY) return null;
-  const res = await fetch('https://api.openai.com/v1/embeddings', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({ model: 'text-embedding-3-small', input })
-  });
+const logger = createLogger('Embeddings');
 
-  if (!res.ok) {
-    return null;
-  }
+/**
+ * Compute the text embedding using Gemini's latest embedding model
+ */
+export async function computeEmbedding(input: string): Promise<number[] | null> {
+    const ai = getGeminiClient();
 
-  const json = await res.json();
-  return json?.data?.[0]?.embedding ?? null;
+    if (!ai) {
+        logger.warn('Gemini client not initialized, skipping embedding generation.');
+        return null;
+    }
+
+    try {
+        const model = ai.getGenerativeModel({ model: 'text-embedding-004' });
+        const result = await model.embedContent(input);
+        const embedding = result.embedding;
+        return embedding.values;
+    } catch (error) {
+        logger.error('Failed to compute embedding via Gemini', { error });
+        return null;
+    }
 }

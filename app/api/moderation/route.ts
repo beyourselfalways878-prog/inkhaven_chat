@@ -41,6 +41,24 @@ const resolveSchema = z.object({
     resolution: z.enum(['dismissed', 'actioned'])
 });
 
+async function getUserPremiumStatus(token?: string): Promise<boolean> {
+    if (!token) return false;
+    try {
+        const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+        if (error || !user) return false;
+
+        const { data } = await supabaseAdmin
+            .from('profiles')
+            .select('is_premium')
+            .eq('id', user.id)
+            .single();
+
+        return !!data?.is_premium;
+    } catch {
+        return false;
+    }
+}
+
 export async function GET(req: Request) {
     try {
         if (!(await verifyAdminAuth(req))) {
@@ -81,9 +99,28 @@ export async function POST(req: NextRequest) {
         if (action === 'check') {
             const validated = checkModerationSchema.parse(body);
             const mode = body.mode || 'safe';
-            const result = await moderationService.checkContent(validated.text, mode);
 
-            logger.info('Content moderation check completed', { requestId, flagged: result.flagged });
+            const token = req.headers.get('authorization')?.split(' ')[1];
+            const isPremium = await getUserPremiumStatus(token);
+
+            const result = await moderationService.checkContent(validated.text, mode, isPremium);
+
+            logger.info('Content moderation check completed', { requestId, flagged: result.flagged, isPremium });
+            return NextResponse.json({ ok: true, data: result });
+        }
+
+        // Check image moderation using Gemini Vision
+        if (action === 'checkImage') {
+            const { image, mimeType } = body;
+            if (!image) {
+                return NextResponse.json({ error: 'Image data is required' }, { status: 400 });
+            }
+
+            const token = req.headers.get('authorization')?.split(' ')[1];
+            const isPremium = await getUserPremiumStatus(token);
+
+            const result = await moderationService.analyzeImage(image, mimeType, isPremium);
+            logger.info('Image moderation check completed', { requestId, flagged: result.flagged, isPremium });
             return NextResponse.json({ ok: true, data: result });
         }
 

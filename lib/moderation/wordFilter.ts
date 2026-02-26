@@ -1,5 +1,5 @@
 /**
- * Word Filter - Fallback content moderation when OpenAI is unavailable
+ * Word Filter - Fallback content moderation
  * 
  * This provides a deterministic, zero-latency content filter that:
  * - Catches obvious profanity and slurs

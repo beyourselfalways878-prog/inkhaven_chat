@@ -19,9 +19,10 @@ interface MessageInputProps {
   onIntensityChange?: (__intensity: number) => void;
   onSendMessage: (_content: string, _type?: WebRTCMessage['messageType'], _replyToId?: string, _metadata?: any) => void;
   onTyping: (_isTyping: boolean) => void;
+  isPremium?: boolean;
 }
 
-export default function MessageInput({ myId, replyTo, onCancelReply, onIntensityChange, onSendMessage, onTyping }: MessageInputProps) {
+export default function MessageInput({ myId, replyTo, onCancelReply, onIntensityChange, onSendMessage, onTyping, isPremium = false }: MessageInputProps) {
   const [value, setValue] = useState('');
   const [blockedMessage, setBlockedMessage] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
@@ -111,6 +112,39 @@ export default function MessageInput({ myId, replyTo, onCancelReply, onIntensity
     setShowFileUpload(false);
     setUploadProgress(0);
     try {
+      // Image Moderation Check
+      if (safetyEnabled && file.type.startsWith('image/')) {
+        setBlockedMessage('Checking image...');
+        setChecking(true);
+
+        // Convert to base64
+        const base64Image = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        const res = await fetch('/api/moderation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'checkImage',
+            image: base64Image,
+            mimeType: file.type
+          })
+        });
+        const json = await res.json();
+
+        if (json?.data?.flagged === true) {
+          setBlockedMessage(`Image blocked by safety filter: ${json.data.reason || 'Content violation'}`);
+          setChecking(false);
+          return;
+        }
+        setBlockedMessage(null);
+        setChecking(false);
+      }
+
       const urlRes = await fetch('/api/files/upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -150,8 +184,38 @@ export default function MessageInput({ myId, replyTo, onCancelReply, onIntensity
     }
   };
 
-  const handleGlowpadSend = (base64Image: string) => {
+  const handleGlowpadSend = async (base64Image: string) => {
     setShowGlowpad(false);
+
+    // Drawing Moderation Check
+    if (safetyEnabled) {
+      setBlockedMessage('Checking drawing...');
+      setChecking(true);
+      try {
+        const res = await fetch('/api/moderation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'checkImage',
+            image: base64Image,
+            mimeType: 'image/webp' // Glowpad uses webp usually
+          })
+        });
+        const json = await res.json();
+
+        if (json?.data?.flagged === true) {
+          setBlockedMessage(`Drawing blocked by safety filter: ${json.data.reason || 'Content violation'}`);
+          setChecking(false);
+          return;
+        }
+        setBlockedMessage(null);
+      } catch (e) {
+        // fail open
+      } finally {
+        setChecking(false);
+      }
+    }
+
     onSendMessage(base64Image, 'glowpad', replyTo?.id);
   };
 
@@ -325,27 +389,36 @@ export default function MessageInput({ myId, replyTo, onCancelReply, onIntensity
           <div className="flex items-center gap-0.5 pb-0.5">
             <button
               type="button"
-              onClick={() => { setShowGlowpad(!showGlowpad); setShowAudioRecorder(false); setShowFileUpload(false); }}
+              onClick={() => {
+                if (!isPremium) return alert('Glowpad Drawings are a Premium feature! Please upgrade to access.');
+                setShowGlowpad(!showGlowpad); setShowAudioRecorder(false); setShowFileUpload(false);
+              }}
               className={`p-2 rounded-xl transition-colors ${showGlowpad ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5'}`}
-              title="Draw Ephemeral Neon"
+              title={isPremium ? "Draw Ephemeral Neon" : "Premium: Draw Ephemeral Neon"}
             >
-              <PenTool size={20} />
+              <PenTool size={20} className={!isPremium ? "opacity-30" : ""} />
             </button>
             <button
               type="button"
-              onClick={() => { setShowAudioRecorder(!showAudioRecorder); setShowFileUpload(false); setShowGlowpad(false); }}
+              onClick={() => {
+                if (!isPremium) return alert('Voice Notes are a Premium feature! Please upgrade to access.');
+                setShowAudioRecorder(!showAudioRecorder); setShowFileUpload(false); setShowGlowpad(false);
+              }}
               className={`p-2 rounded-xl transition-colors ${showAudioRecorder ? 'bg-red-500/20 text-red-400' : 'text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5'}`}
-              title="Record audio"
+              title={isPremium ? "Record audio" : "Premium: Record Audio"}
             >
-              <Mic size={20} />
+              <Mic size={20} className={!isPremium ? "opacity-30" : ""} />
             </button>
             <button
               type="button"
-              onClick={() => { setShowFileUpload(!showFileUpload); setShowAudioRecorder(false); setShowGlowpad(false); }}
+              onClick={() => {
+                if (!isPremium) return alert('File Uploads are a Premium feature! Please upgrade to access.');
+                setShowFileUpload(!showFileUpload); setShowAudioRecorder(false); setShowGlowpad(false);
+              }}
               className={`p-2 rounded-xl transition-colors ${showFileUpload ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/60 hover:bg-slate-100 dark:hover:bg-white/5'}`}
-              title="Upload file"
+              title={isPremium ? "Upload file" : "Premium: Upload File"}
             >
-              <Paperclip size={20} />
+              <Paperclip size={20} className={!isPremium ? "opacity-30" : ""} />
             </button>
             <EmojiToggle onSelect={handleEmojiSelect} />
           </div>

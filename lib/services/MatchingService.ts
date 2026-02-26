@@ -3,7 +3,7 @@
  * AI-powered matching that outperforms Omegle, Holla, and Bumble
  * 
  * Features:
- * - Vector similarity matching using OpenAI embeddings
+ * - Vector similarity matching
  * - Vibe score calculation based on behavior history
  * - Match feedback learning (skip/like)
  * - Anti-gaming with cooldown timers

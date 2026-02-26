@@ -70,7 +70,6 @@ export async function middleware(req: NextRequest) {
         const response = NextResponse.next();
         return addCorsHeaders(response, origin);
     }
-
     // Skip middleware for static files, images, _next, etc.
     if (
         pathname.startsWith('/_next') ||
@@ -80,8 +79,6 @@ export async function middleware(req: NextRequest) {
     ) {
         return NextResponse.next();
     }
-
-    // --- GLOBAL TURNSTILE ENFORCEMENT ---
     // If the user hasn't passed Turnstile in the last 24hrs, redirect to `/verify`.
     // We skip this check for actual Turnstile endpoints to prevent infinite redirect loops.
     // We also skip it for some background/cron APIs if needed, but for now we enforce it.

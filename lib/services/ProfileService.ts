@@ -9,6 +9,7 @@ import { createLogger } from '../logger/Logger';
 import { ValidationError, NotFoundError } from '../errors/AppError';
 import { updateProfileSchema, UpdateProfileInput } from '../schemas';
 import { computeEmbedding } from '../embeddings';
+
 import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generator';
 
 const logger = createLogger('ProfileService');
@@ -141,10 +142,12 @@ export class ProfileService {
                 throw new ValidationError('Failed to update profile');
             }
 
-            // Update embeddings if display name or interests changed
-            if (validated.displayName !== undefined || validated.interests !== undefined) {
+            // Update embeddings if display name or interests changed, AND user is premium
+            if ((validated.displayName !== undefined || validated.interests !== undefined) && data.is_premium) {
                 await this.updateEmbeddings(userId, validated.displayName, validated.interests);
             }
+
+
 
             logger.info('Profile updated successfully', { userId });
 
@@ -154,7 +157,6 @@ export class ProfileService {
             throw error;
         }
     }
-
 
     /**
      * Update user embeddings for ML-based matching

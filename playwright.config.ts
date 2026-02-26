@@ -1,36 +1,39 @@
 import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load env vars
+dotenv.config({ path: path.resolve(__dirname, '.env.local') });
 
 export default defineConfig({
-  testDir: 'playwright/tests',
-  timeout: 120_000,
-  expect: {
-    timeout: 10_000
-  },
-  fullyParallel: false,
-  retries: 1,
-  reporter: 'list',
-  use: {
-    actionTimeout: 5_000,
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3001',
-    trace: 'on-first-retry'
-  },
-  webServer: {
-    command: 'npm run dev',
-    port: 3001,
-    reuseExistingServer: true,
-    timeout: 120_000,
-    env: {
-      // Force deterministic mock chat during Playwright runs and set port cross-platform
-      NEXT_PUBLIC_USE_MOCK_CHAT: '1',
-      NEXT_PUBLIC_TURNSTILE_SITE_KEY: '1x00000000000000000000AA',
-      TURNSTILE_SECRET_KEY: '1x0000000000000000000000000000000AA',
-      PORT: '3001'
-    }
-  },
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] }
-    }
-  ]
+    testDir: './tests',
+    fullyParallel: true,
+    forbidOnly: !!process.env.CI,
+    retries: process.env.CI ? 2 : 0,
+    workers: process.env.CI ? 1 : undefined,
+    reporter: 'html',
+    use: {
+        baseURL: 'http://localhost:3000',
+        trace: 'on-first-retry',
+    },
+    projects: [
+        {
+            name: 'chromium',
+            use: { ...devices['Desktop Chrome'] },
+        },
+        // uncomment for more rigorous testing:
+        // {
+        //   name: 'firefox',
+        //   use: { ...devices['Desktop Firefox'] },
+        // },
+        // {
+        //   name: 'webkit',
+        //   use: { ...devices['Desktop Safari'] },
+        // },
+    ],
+    webServer: {
+        command: 'npm run dev',
+        url: 'http://localhost:3000',
+        reuseExistingServer: !process.env.CI,
+    },
 });

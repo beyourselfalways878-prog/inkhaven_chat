@@ -11,10 +11,9 @@ import { createLogger } from '../logger/Logger';
 import { ModerationError, NotFoundError } from '../errors/AppError';
 import { reportMessageSchema, checkModerationSchema } from '../schemas';
 import { filterContent, containsSelfHarmContent, FilterSeverity } from '../moderation/wordFilter';
+import { getGeminiClient } from '../gemini';
 
 const logger = createLogger('ModerationService');
-
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export interface ModerationResult {
     allowed: boolean;
@@ -28,11 +27,12 @@ export interface ModerationResult {
 export class ModerationService {
     /**
      * Check content for moderation
-     * Uses OpenAI when available, falls back to word filter
+     * Uses word filter
      * NEVER fails open without at least basic filtering
      * @param mode - 'safe' for strict family-friendly filter, 'adult' for standard moderation
+     * @param isPremium - whether the user has a premium subscription to use the Gemini AI
      */
-    async checkContent(text: string, mode: 'safe' | 'adult' = 'safe'): Promise<ModerationResult> {
+    async checkContent(text: string, mode: 'safe' | 'adult' = 'safe', isPremium: boolean = false): Promise<ModerationResult> {
         try {
             logger.info('Checking content for moderation', { textLength: text.length, mode });
 
@@ -49,12 +49,11 @@ export class ModerationService {
             // In ADULT mode: standard threshold, allow more
             const minSeverity = mode === 'safe' ? 'low' : 'high';
 
-            // Try OpenAI moderation first
-            if (OPENAI_API_KEY) {
+            // Try Gemini moderation first ONLY if premium
+            if (isPremium) {
                 try {
-                    const openaiResult = await this.checkWithOpenAI(validated.text);
-                    if (openaiResult) {
-                        // In safe mode, also run word filter for extra safety
+                    const geminiResult = await this.checkWithGemini(validated.text);
+                    if (geminiResult) {
                         if (mode === 'safe') {
                             const filterResult = filterContent(validated.text, { minSeverity: 'low' });
                             if (filterResult.flagged) {
@@ -67,14 +66,14 @@ export class ModerationService {
                                 };
                             }
                         }
-                        return { ...openaiResult, requiresSupport };
+                        return { ...geminiResult, requiresSupport };
                     }
                 } catch (error) {
-                    logger.warn('OpenAI moderation failed, falling back to word filter', { error });
+                    logger.warn('Gemini moderation failed, falling back to word filter', { error });
                 }
             }
 
-            // Fallback to word filter (always runs if OpenAI unavailable or fails)
+            // Fallback to word filter (for free users or if Gemini fails)
             logger.info('Using word filter fallback', { mode, minSeverity });
             const filterResult = filterContent(validated.text, { minSeverity: minSeverity as FilterSeverity });
 
@@ -100,46 +99,118 @@ export class ModerationService {
     }
 
     /**
-     * Check content with OpenAI moderation API
+     * Check text content with Gemini
      */
-    private async checkWithOpenAI(text: string): Promise<ModerationResult | null> {
-        const response = await fetch('https://api.openai.com/v1/moderations', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${OPENAI_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: 'omni-moderation-latest',
-                input: text
-            })
-        });
+    private async checkWithGemini(text: string): Promise<ModerationResult | null> {
+        const ai = getGeminiClient();
+        if (!ai) return null;
 
-        if (!response.ok) {
-            logger.warn('OpenAI moderation API error', { status: response.status });
+        try {
+            const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+            const prompt = `
+You are a content moderation assistant. Analyze the following text and determine if it violates community guidelines.
+Guidelines:
+1. No explicit adult content, hate speech, severe harassment.
+2. Flag clearly abusive or dangerous content.
+
+Respond strictly in JSON format with exactly three fields:
+- "flagged": boolean (true if it violates guidelines, false otherwise)
+- "reason": string (brief explanation if flagged, or empty string if allowed)
+- "categories": object mapping strings like "hate", "sexual", "harassment" to booleans.
+
+Text to analyze:
+"""
+${text}
+"""
+`;
+
+            const result = await model.generateContent(prompt);
+            const responseText = result.response.text();
+
+            // Extract JSON from potential markdown formatting
+            const jsonText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+            const json = JSON.parse(jsonText);
+
+            return {
+                allowed: !json.flagged,
+                flagged: !!json.flagged,
+                reason: json.reason,
+                categories: json.categories
+            };
+        } catch (error) {
+            logger.error('Gemini text moderation failed', { error });
             return null;
         }
-
-        const json = await response.json();
-        const result = json?.results?.[0];
-
-        if (!result) {
-            return null;
-        }
-
-        const flagged = !!result.flagged;
-
-        logger.info('OpenAI moderation check completed', {
-            flagged,
-            categories: result.categories
-        });
-
-        return {
-            allowed: !flagged,
-            flagged,
-            categories: result.categories
-        };
     }
+
+    /**
+     * Analyze image content using Gemini Vision
+     */
+    async analyzeImage(base64Image: string, mimeType: string = 'image/jpeg', isPremium: boolean = false): Promise<ModerationResult> {
+        if (!isPremium) {
+            return {
+                allowed: false,
+                flagged: true,
+                reason: 'Image upload requires a Premium subscription.'
+            };
+        }
+
+        const ai = getGeminiClient();
+
+        // Fast fail open if no API key
+        if (!ai) {
+            return { allowed: true, flagged: false };
+        }
+
+        try {
+            const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+            const prompt = `
+You are an image moderation assistant for a chat app.
+Analyze the image to determine if it violates community guidelines.
+Flag the following: graphic violence, explicit adult nudity, illegal content, or severe gore.
+
+Respond strictly in JSON format:
+{
+  "flagged": true/false,
+  "reason": "If flagged, brief explanation here",
+  "categories": {"nsfw": true/false, "violence": true/false}
+}
+`;
+
+            // The image needs to be provided in the right format for Gemini
+            // Assuming base64 data might include the data URI prefix or just be the raw base64 string
+            const base64Data = base64Image.includes('base64,')
+                ? base64Image.split('base64,')[1]
+                : base64Image;
+
+            const imagePart = {
+                inlineData: {
+                    data: base64Data,
+                    mimeType
+                }
+            };
+
+            const result = await model.generateContent([prompt, imagePart]);
+            const responseText = result.response.text();
+
+            const jsonText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+            const json = JSON.parse(jsonText);
+
+            return {
+                allowed: !json.flagged,
+                flagged: !!json.flagged,
+                reason: json.reason,
+                categories: json.categories
+            };
+        } catch (error) {
+            logger.error('Gemini image moderation failed', { error });
+            // Fail open for images if moderation fails, to not block users entirely over API glitches
+            return { allowed: true, flagged: false, reason: 'Moderation temporarily unavailable' };
+        }
+    }
+
 
     /**
      * Report a user (via a message they sent)
