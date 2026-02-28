@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-unused-vars */
 /* eslint-disable no-unused-vars */
 declare module 'maath/random/dist/maath-random.esm' {
     export function inSphere(
