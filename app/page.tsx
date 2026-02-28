@@ -6,16 +6,7 @@ import { Button } from '../components/ui/button';
 import { useEffect, useState, useCallback } from 'react';
 import { Shield, Target, Lock, Zap, Palette, Mic } from 'lucide-react';
 
-const FloatingOrb = ({ delay, size, color, position }: { delay: number; size: string; color: string; position: string }) => (
-  <div
-    className={`absolute ${position} ${size} rounded-full blur-3xl opacity-40 animate-float`}
-    style={{
-      background: color,
-      animationDelay: `${delay}s`,
-      animationDuration: '8s'
-    }}
-  />
-);
+
 
 const GlowingCard = ({ children, className = '', gradient }: { children: React.ReactNode; className?: string; gradient: string }) => (
   <div className={`relative group ${className}`}>
@@ -93,11 +84,10 @@ export default function Page() {
     <div className="relative min-h-screen overflow-hidden">
       {/* Animated Background */}
       <div className="fixed inset-0 -z-10 bg-obsidian-950">
-        <div className="absolute inset-0 opacity-[0.15] mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }} />
-        <FloatingOrb delay={0} size="w-96 h-96" color="linear-gradient(135deg, rgba(99, 102, 241, 0.4) 0%, rgba(139, 92, 246, 0.4) 100%)" position="top-[-10%] left-[-5%]" />
-        <FloatingOrb delay={2} size="w-80 h-80" color="linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(20, 184, 166, 0.3) 100%)" position="top-[20%] right-[-10%]" />
-        <FloatingOrb delay={4} size="w-72 h-72" color="linear-gradient(135deg, rgba(236, 72, 153, 0.3) 0%, rgba(244, 63, 94, 0.3) 100%)" position="bottom-[10%] left-[20%]" />
-        <FloatingOrb delay={6} size="w-112 h-112" color="radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, transparent 60%)" position="top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute inset-0 opacity-[0.15] mix-blend-overlay w-full h-full" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }} />
+        <div className="absolute top-[-10%] left-[-5%] w-96 h-96 rounded-full blur-3xl opacity-40 animate-float-fast" style={{ background: "linear-gradient(135deg, rgba(99, 102, 241, 0.4) 0%, rgba(139, 92, 246, 0.4) 100%)" }} />
+        <div className="absolute top-[20%] right-[-10%] w-80 h-80 rounded-full blur-3xl opacity-40 animate-float-medium" style={{ background: "linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(20, 184, 166, 0.3) 100%)" }} />
+        <div className="absolute bottom-[10%] left-[20%] w-72 h-72 rounded-full blur-3xl opacity-40 animate-float-slow" style={{ background: "linear-gradient(135deg, rgba(236, 72, 153, 0.3) 0%, rgba(244, 63, 94, 0.3) 100%)" }} />
       </div>
 
       {/* Hero Section */}

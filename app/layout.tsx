@@ -14,10 +14,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  viewportFit: 'cover',
   themeColor: '#0f172a',
-  // Ensures keyboard doesn't hide content on mobile
-  interactiveWidget: 'resizes-content',
 };
 
 export const metadata = {
@@ -67,12 +64,15 @@ export const metadata = {
 import { ThemeProvider } from '../components/ThemeProvider';
 import LiveBackgroundRenderer from '../components/Backgrounds/LiveBackgroundRenderer';
 
+import Script from 'next/script';
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script
-          async
+        <Script
+          id="google-adsense"
+          strategy="lazyOnload"
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7229649791586904"
           crossOrigin="anonymous"
         />
